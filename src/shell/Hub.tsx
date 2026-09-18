@@ -15,8 +15,13 @@ export function Hub({ games }: { games: GameDefinition[] }) {
       <div className="hub__grid">
         {games.map((g) => (
           <button key={g.id} className="card hub__card" onClick={() => openGame(g.id)}>
-            <h2>{g.title}</h2>
-            <p className="muted">{g.tagline}</p>
+            <div className="hub__preview" aria-hidden="true">
+              {g.Preview ? <g.Preview /> : null}
+            </div>
+            <div className="hub__text">
+              <h2>{g.title}</h2>
+              <p className="muted">{g.tagline}</p>
+            </div>
           </button>
         ))}
       </div>

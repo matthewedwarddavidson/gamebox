@@ -12,4 +12,6 @@ export interface GameDefinition {
   tagline: string;
   /** The game's own root component. It manages its own screens and state. */
   Root: ComponentType;
+  /** Optional simplified thumbnail shown on the hub tile. */
+  Preview?: ComponentType;
 }

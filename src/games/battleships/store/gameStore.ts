@@ -46,6 +46,7 @@ interface GameState {
   hintLocked: boolean[];
   solutionShip: boolean[];
 
+  tool: Mark; // active paint tool: 'ship' or 'water'
   marks: Mark[];
   history: Mark[][];
   future: Mark[][];
@@ -65,6 +66,7 @@ interface GameState {
 
   init: () => Promise<void>;
   navigate: (screen: Screen) => void;
+  setTool: (tool: Mark) => void;
   startFree: (difficulty: Difficulty) => void;
   startDaily: (date?: Date) => void;
   nextFree: () => void;
@@ -197,6 +199,7 @@ export const useBattleships = create<GameState>((set, get) => {
     puzzle: null,
     hintLocked: [],
     solutionShip: [],
+    tool: 'ship',
     marks: [],
     history: [],
     future: [],
@@ -255,6 +258,10 @@ export const useBattleships = create<GameState>((set, get) => {
       set({ screen });
     },
 
+    setTool(tool) {
+      set({ tool });
+    },
+
     startFree(difficulty) {
       const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
       beginGame(generate(seed, difficulty), 'free');
@@ -278,8 +285,9 @@ export const useBattleships = create<GameState>((set, get) => {
       const i = idx(row, col, s.puzzle.size);
       if (s.hintLocked[i]) return;
 
-      const order: Mark[] = ['unknown', 'ship', 'water'];
-      const next = order[(order.indexOf(s.marks[i]) + 1) % order.length];
+      // Toggle the active tool on/off; tapping a cell that already holds the
+      // other mark switches it to the active tool.
+      const next: Mark = s.marks[i] === s.tool ? 'unknown' : s.tool;
       const marks = s.marks.slice();
       marks[i] = next;
 

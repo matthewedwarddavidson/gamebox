@@ -40,6 +40,9 @@ export function Play() {
   const nextFree = useBattleships((s) => s.nextFree);
   const navigate = useBattleships((s) => s.navigate);
 
+  const tool = useBattleships((s) => s.tool);
+  const setTool = useBattleships((s) => s.setTool);
+
   const canUndo = useBattleships((s) => s.history.length > 0);
   const canRedo = useBattleships((s) => s.future.length > 0);
 
@@ -99,6 +102,29 @@ export function Play() {
       </div>
 
       {!review && (
+        <div className="bs-tools" role="radiogroup" aria-label="Marking tool">
+          <button
+            className={`btn bs-tool ${tool === 'ship' ? 'bs-tool--active' : ''}`}
+            role="radio"
+            aria-checked={tool === 'ship'}
+            onClick={() => setTool('ship')}
+          >
+            <span className="bs-tool__icon cell__ship cell__ship--single" />
+            Ship
+          </button>
+          <button
+            className={`btn bs-tool ${tool === 'water' ? 'bs-tool--active' : ''}`}
+            role="radio"
+            aria-checked={tool === 'water'}
+            onClick={() => setTool('water')}
+          >
+            <span className="bs-tool__icon cell__water" />
+            Water
+          </button>
+        </div>
+      )}
+
+      {!review && (
         <div className="play__controls">
           <button className="btn" onClick={undo} disabled={!canUndo}>
             Undo
@@ -113,7 +139,8 @@ export function Play() {
       )}
 
       <p className="muted bs-hint-text">
-        Tap a cell to cycle: empty → ship → water. Ships never touch, even diagonally.
+        Pick Ship or Water, then tap cells to place or clear that mark. Ships
+        never touch, even diagonally.
       </p>
 
       {solved && (
