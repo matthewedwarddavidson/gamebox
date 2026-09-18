@@ -5,6 +5,7 @@ import type { GameRecord } from '../store/types';
 function game(overrides: Partial<GameRecord>): GameRecord {
   return {
     id: Math.random().toString(36),
+    game: 'shikaku',
     puzzleId: 'p',
     seed: 1,
     mode: 'free',

@@ -4,6 +4,7 @@ import type { Difficulty, Mode, Rect } from '../engine/types';
 
 export interface GameRecord {
   id: string; // unique record id
+  game: string; // owning game id (e.g. 'shikaku')
   puzzleId: string;
   seed: number;
   mode: Mode;
@@ -19,7 +20,8 @@ export interface GameRecord {
 
 /** Saved in-progress game so a refresh doesn't lose state. */
 export interface SavedGame {
-  id: 'current'; // singleton key
+  id: string; // per-game key (the owning game id)
+  game: string; // owning game id (e.g. 'shikaku')
   puzzleSeed: number;
   mode: Mode;
   difficulty: Difficulty;

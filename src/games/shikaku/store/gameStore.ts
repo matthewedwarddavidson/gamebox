@@ -14,17 +14,22 @@ import {
   type Rect,
 } from '../engine';
 import {
-  clearGames,
+  clearGameRecords,
   clearSavedGame,
-  getAllGames,
+  getGameRecords,
   getSavedGame,
   getSettings,
-  putGame,
+  putGameRecord,
   putSavedGame,
   putSettings,
-} from './db';
+} from '../../../shell/db';
 import { computeStats, emptyStats } from './stats';
 import type { GameRecord, SavedGame, Settings, Stats } from './types';
+
+/** This game's id in the shared persistence layer. */
+const GAME_ID = 'shikaku';
+/** Legacy saved-game key used before persistence became game-namespaced. */
+const LEGACY_SAVED_ID = 'current';
 
 export type Screen = 'home' | 'play' | 'stats' | 'settings';
 
@@ -96,7 +101,8 @@ export const useGame = create<GameState>((set, get) => {
     const s = get();
     if (!s.puzzle || s.solved) return;
     const saved: SavedGame = {
-      id: 'current',
+      id: GAME_ID,
+      game: GAME_ID,
       puzzleSeed: s.puzzle.seed,
       mode: s.mode,
       difficulty: s.puzzle.difficulty,
@@ -110,7 +116,7 @@ export const useGame = create<GameState>((set, get) => {
   }
 
   async function refreshStats(): Promise<void> {
-    const games = await getAllGames();
+    const games = await getGameRecords<GameRecord>(GAME_ID, { includeUntagged: true });
     set({ games, stats: computeStats(games) });
   }
 
@@ -154,6 +160,7 @@ export const useGame = create<GameState>((set, get) => {
     if (!alreadyWonDaily) {
       const record: GameRecord = {
         id: s.recordId ?? newRecordId(),
+        game: GAME_ID,
         puzzleId: s.puzzle.id,
         seed: s.puzzle.seed,
         mode: s.mode,
@@ -166,9 +173,9 @@ export const useGame = create<GameState>((set, get) => {
         score,
         dailyKey: s.dailyKey,
       };
-      await putGame(record);
+      await putGameRecord(record);
     }
-    await clearSavedGame();
+    await clearSavedGame(GAME_ID, { legacyId: LEGACY_SAVED_ID });
     await refreshStats();
   }
 
@@ -194,9 +201,9 @@ export const useGame = create<GameState>((set, get) => {
 
     async init() {
       const [settings, games, saved] = await Promise.all([
-        getSettings(),
-        getAllGames(),
-        getSavedGame(),
+        getSettings<Settings>(),
+        getGameRecords<GameRecord>(GAME_ID, { includeUntagged: true }),
+        getSavedGame<SavedGame>(GAME_ID, { legacyId: LEGACY_SAVED_ID }),
       ]);
       const resolvedSettings = settings ?? DEFAULT_SETTINGS;
       set({
@@ -350,7 +357,8 @@ export const useGame = create<GameState>((set, get) => {
       const s = get();
       set({ running: false });
       // Don't discard a real in-progress saved game when leaving review mode.
-      if (s.puzzle && !s.solved && !s.review) void clearSavedGame();
+      if (s.puzzle && !s.solved && !s.review)
+        void clearSavedGame(GAME_ID, { legacyId: LEGACY_SAVED_ID });
       set({ screen: 'home', review: false });
     },
 
@@ -361,20 +369,20 @@ export const useGame = create<GameState>((set, get) => {
     },
 
     async resetStats() {
-      await clearGames();
-      await clearSavedGame();
+      await clearGameRecords(GAME_ID, { includeUntagged: true });
+      await clearSavedGame(GAME_ID, { legacyId: LEGACY_SAVED_ID });
       set({ games: [], stats: emptyStats() });
     },
 
     async exportData() {
-      const games = await getAllGames();
+      const games = await getGameRecords<GameRecord>(GAME_ID, { includeUntagged: true });
       return JSON.stringify({ version: 1, games, settings: get().settings }, null, 2);
     },
 
     async importData(json) {
       const data = JSON.parse(json) as { games?: GameRecord[]; settings?: Settings };
       if (Array.isArray(data.games)) {
-        for (const g of data.games) await putGame(g);
+        for (const g of data.games) await putGameRecord({ ...g, game: g.game ?? GAME_ID });
       }
       if (data.settings) {
         await putSettings(data.settings);
