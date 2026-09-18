@@ -2,8 +2,9 @@
 // GameDefinition and add it here — the hub and router pick it up automatically.
 import type { GameDefinition } from './types';
 import { shikakuGame } from '../games/shikaku';
+import { battleshipsGame } from '../games/battleships';
 
-export const GAMES: GameDefinition[] = [shikakuGame];
+export const GAMES: GameDefinition[] = [shikakuGame, battleshipsGame];
 
 export function getGame(id: string): GameDefinition | undefined {
   return GAMES.find((g) => g.id === id);

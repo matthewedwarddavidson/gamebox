@@ -1,0 +1,82 @@
+import { idx, isShip, type CellType, type Mark, type Puzzle } from '../engine';
+
+interface BoardProps {
+  puzzle: Puzzle;
+  marks: Mark[];
+  hintLocked: boolean[];
+  review: boolean;
+  onCycle: (row: number, col: number) => void;
+}
+
+/** Visual class for a ship segment shape (rounds the appropriate corners). */
+function shipShapeClass(type: CellType): string {
+  return `cell__ship cell__ship--${type === 'water' ? 'middle' : type}`;
+}
+
+export function Board({ puzzle, marks, hintLocked, review, onCycle }: BoardProps) {
+  const { size, rowCounts, colCounts, solution } = puzzle;
+
+  // Current ship-mark tallies per row/column for live feedback.
+  const rowFilled = new Array(size).fill(0);
+  const colFilled = new Array(size).fill(0);
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (marks[idx(r, c, size)] === 'ship') {
+        rowFilled[r]++;
+        colFilled[c]++;
+      }
+    }
+  }
+
+  const gridStyle = {
+    gridTemplateColumns: `auto repeat(${size}, 1fr)`,
+  } as React.CSSProperties;
+
+  return (
+    <div className="bs-board" style={gridStyle}>
+      <div className="bs-corner" />
+      {Array.from({ length: size }, (_, c) => {
+        const state =
+          colFilled[c] === colCounts[c] ? 'done' : colFilled[c] > colCounts[c] ? 'over' : '';
+        return (
+          <div key={`col-${c}`} className={`bs-count bs-count--col ${state}`}>
+            {colCounts[c]}
+          </div>
+        );
+      })}
+
+      {Array.from({ length: size }, (_, r) => {
+        const rowState =
+          rowFilled[r] === rowCounts[r] ? 'done' : rowFilled[r] > rowCounts[r] ? 'over' : '';
+        return (
+          <div key={`row-${r}`} style={{ display: 'contents' }}>
+            <div className={`bs-count bs-count--row ${rowState}`}>{rowCounts[r]}</div>
+            {Array.from({ length: size }, (_, c) => {
+              const i = idx(r, c, size);
+              const mark = marks[i];
+              const locked = hintLocked[i];
+              const solType = solution[i];
+              const showShip = review ? isShip(solType) : mark === 'ship';
+              const showWater = review ? !isShip(solType) : mark === 'water';
+              const typeForShape: CellType =
+                review || locked ? solType : 'middle'; // player ships: generic
+
+              return (
+                <button
+                  key={i}
+                  className={`bs-cell ${locked ? 'bs-cell--locked' : ''}`}
+                  onClick={() => onCycle(r, c)}
+                  disabled={review || locked}
+                  aria-label={`row ${r + 1} column ${c + 1}: ${mark}`}
+                >
+                  {showShip && <span className={shipShapeClass(typeForShape)} />}
+                  {showWater && <span className="cell__water" />}
+                </button>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

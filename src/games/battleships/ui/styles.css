@@ -1,0 +1,154 @@
+/* Battleships-specific styles. Shared design-system classes (.app, .card,
+   .btn, .chip, .badge, .win, .stat, .play, etc.) and the CSS theme variables
+   are provided globally by the app's base stylesheet. */
+
+.bs-board {
+  display: grid;
+  gap: 2px;
+  background: var(--board-bg);
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin: 12px 0;
+  user-select: none;
+}
+
+.bs-corner {
+  aspect-ratio: 1;
+}
+
+.bs-count {
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--muted);
+  font-size: clamp(0.7rem, 3.2vw, 1rem);
+  min-width: 1.4em;
+}
+
+.bs-count.done {
+  color: var(--primary);
+}
+
+.bs-count.over {
+  color: var(--danger);
+}
+
+.bs-cell {
+  aspect-ratio: 1;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.08s ease;
+}
+
+.bs-cell:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.bs-cell--locked {
+  background: var(--surface-2);
+  cursor: default;
+}
+
+/* Ship segment shapes. */
+.cell__ship {
+  width: 84%;
+  height: 84%;
+  background: var(--text);
+  border-radius: 18%;
+}
+
+.cell__ship--single {
+  border-radius: 50%;
+}
+
+.cell__ship--middle {
+  width: 94%;
+  height: 94%;
+  border-radius: 12%;
+}
+
+.cell__ship--left {
+  border-radius: 45% 12% 12% 45%;
+}
+
+.cell__ship--right {
+  border-radius: 12% 45% 45% 12%;
+}
+
+.cell__ship--top {
+  border-radius: 45% 45% 12% 12%;
+}
+
+.cell__ship--bottom {
+  border-radius: 12% 12% 45% 45%;
+}
+
+.cell__water {
+  width: 26%;
+  height: 26%;
+  background: var(--muted);
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.bs-fleet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 4px 0 12px;
+}
+
+.bs-fleet__item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.bs-fleet__ship {
+  display: inline-flex;
+  gap: 0;
+}
+
+.bs-fleet__seg {
+  width: 13px;
+  height: 13px;
+  background: var(--text);
+  border-radius: 15%;
+}
+
+.bs-fleet__seg--single {
+  border-radius: 50%;
+}
+
+.bs-fleet__seg--middle {
+  border-radius: 0;
+}
+
+.bs-fleet__seg--left {
+  border-radius: 50% 0 0 50%;
+}
+
+.bs-fleet__seg--right {
+  border-radius: 0 50% 50% 0;
+}
+
+.bs-fleet__count {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.bs-hint-text {
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.badge--warn {
+  color: var(--danger);
+}

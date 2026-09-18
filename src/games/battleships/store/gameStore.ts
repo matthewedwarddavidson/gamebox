@@ -1,0 +1,359 @@
+// Battleships game store (Zustand). Owns the current puzzle, the player's cell
+// marks, timer, mistakes, persistence (via the shared shell DB) and stats.
+
+import { create } from 'zustand';
+import {
+  dailyFor,
+  generate,
+  idx,
+  isShip,
+  type CellType,
+  type Difficulty,
+  type Mode,
+  type Puzzle,
+  type Mark,
+} from '../engine';
+import {
+  clearGameRecords,
+  clearSavedGame,
+  getGameRecords,
+  getSavedGame,
+  getSettings,
+  putGameRecord,
+  putSavedGame,
+} from '../../../shell/db';
+import { computeStats, emptyStats } from './stats';
+import type { GameRecord, SavedGame, Stats } from './types';
+
+const GAME_ID = 'battleships';
+
+export type Screen = 'home' | 'play';
+
+export type Theme = 'light' | 'dark';
+
+interface StartedPuzzle {
+  puzzle: Puzzle;
+  hintLocked: boolean[]; // cells fixed by a revealed hint
+  solutionShip: boolean[]; // solution ship mask
+}
+
+interface GameState {
+  ready: boolean;
+  screen: Screen;
+  theme: Theme;
+
+  puzzle: Puzzle | null;
+  hintLocked: boolean[];
+  solutionShip: boolean[];
+
+  marks: Mark[];
+  history: Mark[][];
+  future: Mark[][];
+
+  mode: Mode;
+  dailyKey?: string;
+  mistakes: number;
+  startedAt: number;
+  elapsedMs: number;
+  running: boolean;
+  solved: boolean;
+  review: boolean;
+  recordId: string | null;
+
+  stats: Stats;
+  games: GameRecord[];
+
+  init: () => Promise<void>;
+  navigate: (screen: Screen) => void;
+  startFree: (difficulty: Difficulty) => void;
+  startDaily: (date?: Date) => void;
+  nextFree: () => void;
+  cycleCell: (row: number, col: number) => void;
+  undo: () => void;
+  redo: () => void;
+  clearMarks: () => void;
+  tick: () => void;
+  abandon: () => void;
+  resetStats: () => Promise<void>;
+}
+
+function newRecordId(): string {
+  return `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+}
+
+function prepare(puzzle: Puzzle): StartedPuzzle {
+  const n = puzzle.size * puzzle.size;
+  const hintLocked = new Array(n).fill(false);
+  const solutionShip = new Array(n).fill(false);
+  for (let i = 0; i < n; i++) solutionShip[i] = isShip(puzzle.solution[i]);
+  return { puzzle, hintLocked, solutionShip };
+}
+
+function initialMarks(puzzle: Puzzle, hintLocked: boolean[]): Mark[] {
+  const n = puzzle.size * puzzle.size;
+  const marks: Mark[] = new Array(n).fill('unknown');
+  for (const h of puzzle.hints) {
+    const i = idx(h.row, h.col, puzzle.size);
+    hintLocked[i] = true;
+    marks[i] = isShip(h.type) ? 'ship' : 'water';
+  }
+  return marks;
+}
+
+function isWin(marks: Mark[], solutionShip: boolean[]): boolean {
+  for (let i = 0; i < marks.length; i++) {
+    const marked = marks[i] === 'ship';
+    if (marked !== solutionShip[i]) return false;
+  }
+  return true;
+}
+
+export const useBattleships = create<GameState>((set, get) => {
+  async function saveCurrent(): Promise<void> {
+    const s = get();
+    if (!s.puzzle || s.solved || s.review) return;
+    const saved: SavedGame = {
+      id: GAME_ID,
+      game: GAME_ID,
+      seed: s.puzzle.seed,
+      mode: s.mode,
+      difficulty: s.puzzle.difficulty,
+      dailyKey: s.dailyKey,
+      marks: s.marks,
+      startedAt: s.startedAt,
+      elapsedMs: s.elapsedMs,
+      mistakes: s.mistakes,
+    };
+    await putSavedGame(saved);
+  }
+
+  async function refreshStats(): Promise<void> {
+    const games = await getGameRecords<GameRecord>(GAME_ID);
+    set({ games, stats: computeStats(games) });
+  }
+
+  function beginGame(puzzle: Puzzle, mode: Mode, dailyKey?: string): void {
+    const { hintLocked, solutionShip } = prepare(puzzle);
+    const marks = initialMarks(puzzle, hintLocked);
+    set({
+      puzzle,
+      hintLocked,
+      solutionShip,
+      marks,
+      history: [],
+      future: [],
+      mode,
+      dailyKey,
+      mistakes: 0,
+      startedAt: Date.now(),
+      elapsedMs: 0,
+      running: true,
+      solved: false,
+      review: false,
+      recordId: newRecordId(),
+      screen: 'play',
+    });
+    void saveCurrent();
+  }
+
+  async function finishGame(): Promise<void> {
+    const s = get();
+    if (!s.puzzle) return;
+    const durationMs = s.elapsedMs;
+
+    const alreadyWonDaily =
+      s.mode === 'daily' &&
+      s.dailyKey !== undefined &&
+      s.games.some(
+        (g) => g.mode === 'daily' && g.status === 'won' && g.dailyKey === s.dailyKey,
+      );
+
+    set({ running: false, solved: true });
+
+    if (!alreadyWonDaily) {
+      const record: GameRecord = {
+        id: s.recordId ?? newRecordId(),
+        game: GAME_ID,
+        seed: s.puzzle.seed,
+        mode: s.mode,
+        difficulty: s.puzzle.difficulty,
+        startedAt: s.startedAt,
+        finishedAt: Date.now(),
+        durationMs,
+        status: 'won',
+        mistakes: s.mistakes,
+        dailyKey: s.dailyKey,
+      };
+      await putGameRecord(record);
+    }
+    await clearSavedGame(GAME_ID);
+    await refreshStats();
+  }
+
+  return {
+    ready: false,
+    screen: 'home',
+    theme: 'light',
+    puzzle: null,
+    hintLocked: [],
+    solutionShip: [],
+    marks: [],
+    history: [],
+    future: [],
+    mode: 'free',
+    dailyKey: undefined,
+    mistakes: 0,
+    startedAt: 0,
+    elapsedMs: 0,
+    running: false,
+    solved: false,
+    review: false,
+    recordId: null,
+    stats: emptyStats(),
+    games: [],
+
+    async init() {
+      const [settings, games, saved] = await Promise.all([
+        getSettings<{ id: string; theme?: Theme }>(),
+        getGameRecords<GameRecord>(GAME_ID),
+        getSavedGame<SavedGame>(GAME_ID),
+      ]);
+      set({
+        theme: settings?.theme ?? 'light',
+        games,
+        stats: computeStats(games),
+        ready: true,
+      });
+
+      if (saved) {
+        const puzzle = generate(saved.seed, saved.difficulty);
+        const { hintLocked, solutionShip } = prepare(puzzle);
+        // Re-lock hint cells; overlay the player's saved marks.
+        const marks = initialMarks(puzzle, hintLocked);
+        for (let i = 0; i < marks.length; i++) {
+          if (!hintLocked[i] && saved.marks[i]) marks[i] = saved.marks[i];
+        }
+        set({
+          puzzle,
+          hintLocked,
+          solutionShip,
+          marks,
+          mode: saved.mode,
+          dailyKey: saved.dailyKey,
+          mistakes: saved.mistakes,
+          startedAt: Date.now() - saved.elapsedMs,
+          elapsedMs: saved.elapsedMs,
+          running: false,
+          solved: false,
+          review: false,
+          recordId: newRecordId(),
+        });
+      }
+    },
+
+    navigate(screen) {
+      set({ screen });
+    },
+
+    startFree(difficulty) {
+      const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
+      beginGame(generate(seed, difficulty), 'free');
+    },
+
+    startDaily(date) {
+      const { seed, difficulty, dateKey } = dailyFor(date ?? new Date());
+      beginGame(generate(seed, difficulty), 'daily', dateKey);
+    },
+
+    nextFree() {
+      const s = get();
+      const difficulty = s.puzzle?.difficulty ?? 'easy';
+      const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
+      beginGame(generate(seed, difficulty), 'free');
+    },
+
+    cycleCell(row, col) {
+      const s = get();
+      if (!s.puzzle || s.solved || s.review) return;
+      const i = idx(row, col, s.puzzle.size);
+      if (s.hintLocked[i]) return;
+
+      const order: Mark[] = ['unknown', 'ship', 'water'];
+      const next = order[(order.indexOf(s.marks[i]) + 1) % order.length];
+      const marks = s.marks.slice();
+      marks[i] = next;
+
+      let mistakes = s.mistakes;
+      if (next === 'ship' && !s.solutionShip[i]) mistakes++;
+
+      set({
+        marks,
+        history: [...s.history, s.marks],
+        future: [],
+        mistakes,
+      });
+
+      if (isWin(marks, s.solutionShip)) {
+        void finishGame();
+      } else {
+        void saveCurrent();
+      }
+    },
+
+    undo() {
+      const s = get();
+      if (s.history.length === 0) return;
+      const prev = s.history[s.history.length - 1];
+      set({
+        marks: prev,
+        history: s.history.slice(0, -1),
+        future: [s.marks, ...s.future],
+      });
+      void saveCurrent();
+    },
+
+    redo() {
+      const s = get();
+      if (s.future.length === 0) return;
+      const next = s.future[0];
+      set({
+        marks: next,
+        history: [...s.history, s.marks],
+        future: s.future.slice(1),
+      });
+      void saveCurrent();
+    },
+
+    clearMarks() {
+      const s = get();
+      if (!s.puzzle || s.review) return;
+      const marks = initialMarks(s.puzzle, s.hintLocked.slice());
+      set({ marks, history: [...s.history, s.marks], future: [] });
+      void saveCurrent();
+    },
+
+    tick() {
+      const s = get();
+      if (!s.running || s.solved) return;
+      set({ elapsedMs: Date.now() - s.startedAt });
+    },
+
+    abandon() {
+      const s = get();
+      set({ running: false });
+      if (s.puzzle && !s.solved && !s.review) void clearSavedGame(GAME_ID);
+      set({ screen: 'home', review: false });
+    },
+
+    async resetStats() {
+      await clearGameRecords(GAME_ID);
+      await clearSavedGame(GAME_ID);
+      set({ games: [], stats: emptyStats() });
+    },
+  };
+});
+
+/** Convenience selector: the solution ship type at a cell (for review mode). */
+export function solutionTypeAt(puzzle: Puzzle, row: number, col: number): CellType {
+  return puzzle.solution[idx(row, col, puzzle.size)];
+}
