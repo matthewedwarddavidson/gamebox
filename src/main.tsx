@@ -1,10 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { App } from './games/shikaku/ui/App';
+import { AppShell } from './shell/AppShell';
 import './games/shikaku/ui/styles.css';
+import './shell/shell.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <AppShell />
   </React.StrictMode>,
 );
