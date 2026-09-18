@@ -13,6 +13,27 @@ function shipShapeClass(type: CellType): string {
   return `cell__ship cell__ship--${type === 'water' ? 'middle' : type}`;
 }
 
+/**
+ * Derive a player ship cell's shape from its neighbouring ship marks so that
+ * ends curve and middles stay square — matching the revealed hint shapes.
+ */
+function shipTypeFromMarks(marks: Mark[], r: number, c: number, size: number): CellType {
+  const isS = (rr: number, cc: number) =>
+    rr >= 0 && cc >= 0 && rr < size && cc < size && marks[idx(rr, cc, size)] === 'ship';
+  const up = isS(r - 1, c);
+  const down = isS(r + 1, c);
+  const left = isS(r, c - 1);
+  const right = isS(r, c + 1);
+
+  if (!up && !down && !left && !right) return 'single';
+  if (left || right) {
+    if (left && right) return 'middle';
+    return right ? 'left' : 'right';
+  }
+  if (up && down) return 'middle';
+  return down ? 'top' : 'bottom';
+}
+
 export function Board({ puzzle, marks, hintLocked, review, onCycle }: BoardProps) {
   const { size, rowCounts, colCounts, solution } = puzzle;
 
@@ -59,7 +80,7 @@ export function Board({ puzzle, marks, hintLocked, review, onCycle }: BoardProps
               const showShip = review ? isShip(solType) : mark === 'ship';
               const showWater = review ? !isShip(solType) : mark === 'water';
               const typeForShape: CellType =
-                review || locked ? solType : 'middle'; // player ships: generic
+                review || locked ? solType : shipTypeFromMarks(marks, r, c, size);
 
               return (
                 <button

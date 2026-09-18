@@ -111,16 +111,20 @@
   gap: 5px;
 }
 
+.bs-fleet__item--done {
+  opacity: 0.35;
+}
+
 .bs-fleet__ship {
   display: inline-flex;
-  gap: 0;
+  gap: 2px;
 }
 
 .bs-fleet__seg {
   width: 13px;
   height: 13px;
   background: var(--text);
-  border-radius: 15%;
+  border-radius: 18%;
 }
 
 .bs-fleet__seg--single {
@@ -128,15 +132,15 @@
 }
 
 .bs-fleet__seg--middle {
-  border-radius: 0;
+  border-radius: 12%;
 }
 
 .bs-fleet__seg--left {
-  border-radius: 50% 0 0 50%;
+  border-radius: 45% 12% 12% 45%;
 }
 
 .bs-fleet__seg--right {
-  border-radius: 0 50% 50% 0;
+  border-radius: 12% 45% 45% 12%;
 }
 
 .bs-fleet__count {

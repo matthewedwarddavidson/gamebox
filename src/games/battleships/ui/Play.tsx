@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useBattleships } from '../store/gameStore';
 import { Board } from './Board';
 import { capitalize, formatDuration } from './format';
+import { idx, type Mark } from '../engine';
 
 /** Group a fleet list into { length, count } rows, largest first. */
 function fleetGroups(fleet: number[]): { len: number; count: number }[] {
@@ -18,6 +19,50 @@ function fleetSegClass(len: number, k: number): string {
   if (k === 0) return 'bs-fleet__seg--left';
   if (k === len - 1) return 'bs-fleet__seg--right';
   return 'bs-fleet__seg--middle';
+}
+
+/**
+ * Count completed boats on the board by length: a boat is a maximal, straight
+ * (horizontal or vertical) run of connected ship marks.
+ */
+function placedBoats(marks: Mark[], size: number): Map<number, number> {
+  const seen = new Array(marks.length).fill(false);
+  const counts = new Map<number, number>();
+  const isShipMark = (i: number) => marks[i] === 'ship';
+
+  for (let start = 0; start < marks.length; start++) {
+    if (!isShipMark(start) || seen[start]) continue;
+    const cells: number[] = [];
+    const stack = [start];
+    seen[start] = true;
+    while (stack.length) {
+      const j = stack.pop() as number;
+      cells.push(j);
+      const r = Math.floor(j / size);
+      const c = j % size;
+      for (const [dr, dc] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ]) {
+        const nr = r + dr;
+        const nc = c + dc;
+        if (nr < 0 || nc < 0 || nr >= size || nc >= size) continue;
+        const nj = idx(nr, nc, size);
+        if (isShipMark(nj) && !seen[nj]) {
+          seen[nj] = true;
+          stack.push(nj);
+        }
+      }
+    }
+    const rows = new Set(cells.map((j) => Math.floor(j / size)));
+    const cols = new Set(cells.map((j) => j % size));
+    if (rows.size === 1 || cols.size === 1) {
+      counts.set(cells.length, (counts.get(cells.length) ?? 0) + 1);
+    }
+  }
+  return counts;
 }
 
 export function Play() {
@@ -54,6 +99,10 @@ export function Play() {
   }, [running, solved, tick]);
 
   const groups = useMemo(() => (puzzle ? fleetGroups(puzzle.fleet) : []), [puzzle]);
+  const placed = useMemo(
+    () => (puzzle ? placedBoats(marks, puzzle.size) : new Map<number, number>()),
+    [puzzle, marks],
+  );
 
   if (!puzzle) {
     return (
@@ -89,16 +138,22 @@ export function Play() {
       />
 
       <div className="bs-fleet">
-        {groups.map((g) => (
-          <span key={g.len} className="bs-fleet__item">
-            <span className="bs-fleet__ship">
-              {Array.from({ length: g.len }, (_, k) => (
-                <span key={k} className={`bs-fleet__seg ${fleetSegClass(g.len, k)}`} />
-              ))}
+        {groups.map((g) => {
+          const remaining = Math.max(0, g.count - (placed.get(g.len) ?? 0));
+          return (
+            <span
+              key={g.len}
+              className={`bs-fleet__item ${remaining === 0 ? 'bs-fleet__item--done' : ''}`}
+            >
+              <span className="bs-fleet__ship">
+                {Array.from({ length: g.len }, (_, k) => (
+                  <span key={k} className={`bs-fleet__seg ${fleetSegClass(g.len, k)}`} />
+                ))}
+              </span>
+              <span className="bs-fleet__count">×{remaining}</span>
             </span>
-            <span className="bs-fleet__count">×{g.count}</span>
-          </span>
-        ))}
+          );
+        })}
       </div>
 
       {!review && (

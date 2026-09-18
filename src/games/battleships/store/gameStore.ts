@@ -251,6 +251,10 @@ export const useBattleships = create<GameState>((set, get) => {
           review: false,
           recordId: newRecordId(),
         });
+
+        // A saved board can already be complete (e.g. finished via undo before
+        // a reload); recognise the win on resume rather than requiring a move.
+        if (isWin(marks, solutionShip)) void finishGame();
       }
     },
 
@@ -317,7 +321,11 @@ export const useBattleships = create<GameState>((set, get) => {
         history: s.history.slice(0, -1),
         future: [s.marks, ...s.future],
       });
-      void saveCurrent();
+      if (!s.solved && isWin(prev, s.solutionShip)) {
+        void finishGame();
+      } else {
+        void saveCurrent();
+      }
     },
 
     redo() {
@@ -329,7 +337,11 @@ export const useBattleships = create<GameState>((set, get) => {
         history: [...s.history, s.marks],
         future: s.future.slice(1),
       });
-      void saveCurrent();
+      if (!s.solved && isWin(next, s.solutionShip)) {
+        void finishGame();
+      } else {
+        void saveCurrent();
+      }
     },
 
     clearMarks() {

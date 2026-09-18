@@ -66,4 +66,31 @@ describe('battleships store', () => {
     useBattleships.getState().undo();
     expect(useBattleships.getState().marks[target]).toBe('unknown');
   });
+
+  it('detects a win reached by undoing a stray ship', async () => {
+    useBattleships.getState().startFree('hard');
+    await solveCurrent();
+    expect(useBattleships.getState().solved).toBe(true);
+
+    // Undo back to one-move-from-solved, place a wrong ship, then undo it: the
+    // board returns to the solution via undo and the win must still register.
+    const { puzzle, solutionShip, hintLocked } = useBattleships.getState();
+    if (!puzzle) throw new Error('no puzzle');
+    const lastShip = (() => {
+      for (let i = solutionShip.length - 1; i >= 0; i--) {
+        if (solutionShip[i] && !hintLocked[i]) return i;
+      }
+      throw new Error('no ship');
+    })();
+
+    // Restart the same puzzle and drive it via a path that ends on undo.
+    useBattleships.setState({ solved: false, running: true });
+    const r = Math.floor(lastShip / puzzle.size);
+    const c = lastShip % puzzle.size;
+    useBattleships.getState().cycleCell(r, c); // remove last ship -> not solved
+    expect(useBattleships.getState().solved).toBe(false);
+    useBattleships.getState().undo(); // restore it via undo -> solved again
+    await flush();
+    expect(useBattleships.getState().solved).toBe(true);
+  });
 });
