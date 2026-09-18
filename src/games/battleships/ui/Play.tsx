@@ -129,13 +129,35 @@ export function Play() {
         </div>
       </header>
 
-      <Board
-        puzzle={puzzle}
-        marks={marks}
-        hintLocked={hintLocked}
-        review={review}
-        onCycle={cycleCell}
-      />
+      <div className="bs-board-wrap">
+        <Board
+          puzzle={puzzle}
+          marks={marks}
+          hintLocked={hintLocked}
+          review={review}
+          onCycle={cycleCell}
+        />
+
+        {solved && (
+          <div className="bs-solved-overlay">
+            <div className="win bs-solved-card">
+              <h2>Solved! 🎉</h2>
+              <p className="muted">
+                {capitalize(puzzle.difficulty)} · {formatDuration(elapsedMs)} · {mistakes}{' '}
+                mistakes
+              </p>
+              <div className="win__actions">
+                <button className="btn btn--primary" onClick={nextFree}>
+                  New puzzle
+                </button>
+                <button className="btn" onClick={() => navigate('home')}>
+                  Home
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="bs-fleet">
         {groups.map((g) => {
@@ -197,23 +219,6 @@ export function Play() {
         Pick Ship or Water, then tap cells to place or clear that mark. Ships
         never touch, even diagonally.
       </p>
-
-      {solved && (
-        <div className="win">
-          <h2>Solved! 🎉</h2>
-          <p className="muted">
-            {capitalize(puzzle.difficulty)} · {formatDuration(elapsedMs)} · {mistakes} mistakes
-          </p>
-          <div className="win__actions">
-            <button className="btn btn--primary" onClick={nextFree}>
-              New puzzle
-            </button>
-            <button className="btn" onClick={() => navigate('home')}>
-              Home
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
