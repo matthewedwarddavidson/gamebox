@@ -233,3 +233,94 @@ export function isValidSolution(
   }
   return occupied.every((v) => v === 1); // full coverage
 }
+
+/**
+ * Rate how hard a (uniquely-solvable) puzzle is for a human, as the number of
+ * "guesses" needed.
+ *
+ * We simulate a human solver: repeatedly place every clue that has only one
+ * possible rectangle left (a forced move), propagating those certainties. When
+ * no forced move remains but clues are still unplaced, the solver is stuck and
+ * must guess — we advance by placing the true solution rectangle for the
+ * most-constrained remaining clue and count one guess. The total guess count is
+ * a stable difficulty signal: 0 means the puzzle falls out by pure logic, while
+ * higher counts mean more deduction/branching is required.
+ *
+ * `solution[i]` must be the rectangle for `clues[i]` (index-aligned), as
+ * produced by generation.
+ */
+export function rateDifficulty(
+  clues: Clue[],
+  solution: Rect[],
+  width: number,
+  height: number,
+): number {
+  const candidates = buildCandidates(clues, width, height);
+  const n = clues.length;
+  const occupied = new Uint8Array(width * height);
+  const placed = new Uint8Array(n);
+  const idx = (row: number, col: number) => row * width + col;
+
+  const canPlace = (r: Rect): boolean => {
+    for (let row = r.row0; row <= r.row1; row++) {
+      for (let col = r.col0; col <= r.col1; col++) {
+        if (occupied[idx(row, col)] !== 0) return false;
+      }
+    }
+    return true;
+  };
+
+  const fill = (r: Rect, value: number) => {
+    for (let row = r.row0; row <= r.row1; row++) {
+      for (let col = r.col0; col <= r.col1; col++) {
+        occupied[idx(row, col)] = value;
+      }
+    }
+  };
+
+  const placeableCount = (i: number): number => {
+    let c = 0;
+    for (const r of candidates[i]) if (canPlace(r)) c++;
+    return c;
+  };
+
+  let guesses = 0;
+  let remaining = n;
+
+  while (remaining > 0) {
+    // Propagate all forced moves (clues with a single placeable rectangle).
+    let progressed = true;
+    while (progressed) {
+      progressed = false;
+      for (let i = 0; i < n; i++) {
+        if (placed[i]) continue;
+        if (placeableCount(i) === 1) {
+          const r = candidates[i].find(canPlace)!;
+          fill(r, i + 1);
+          placed[i] = 1;
+          remaining--;
+          progressed = true;
+        }
+      }
+    }
+    if (remaining === 0) break;
+
+    // Stuck: guess on the most-constrained clue, following the known solution.
+    let best = -1;
+    let bestCount = Infinity;
+    for (let i = 0; i < n; i++) {
+      if (placed[i]) continue;
+      const c = placeableCount(i);
+      if (c < bestCount) {
+        bestCount = c;
+        best = i;
+      }
+    }
+    fill(solution[best], best + 1);
+    placed[best] = 1;
+    remaining--;
+    guesses++;
+  }
+
+  return guesses;
+}

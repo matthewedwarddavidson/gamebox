@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { generate } from '../engine/generator';
-import { solve, isValidSolution } from '../engine/solver';
+import { solve, isValidSolution, rateDifficulty } from '../engine/solver';
 import { DIFFICULTIES, rectArea, BOARD_HEIGHT, BOARD_WIDTH } from '../engine/types';
 
 describe('generate', () => {
@@ -48,4 +48,32 @@ describe('generate', () => {
       });
     });
   }
+
+  it('difficulty tiers do not overlap: easy < medium < hard < expert', () => {
+    // Every generated puzzle carries a difficulty score (human-solver guesses
+    // per box, x100). The generator enforces non-overlapping score bands per
+    // tier, so the hardest easy puzzle must be strictly easier than the
+    // easiest medium, and so on. This guarantees a random expert is always
+    // harder than a random medium.
+    const score = (seed: number, difficulty: (typeof DIFFICULTIES)[number]) => {
+      const p = generate(seed, difficulty);
+      return Math.round(
+        (rateDifficulty(p.clues, p.solution, p.width, p.height) / p.solution.length) * 100,
+      );
+    };
+
+    const SEEDS = 60;
+    const scores: Record<string, number[]> = {};
+    for (const d of DIFFICULTIES) {
+      scores[d] = [];
+      for (let seed = 0; seed < SEEDS; seed++) scores[d].push(score(seed, d));
+    }
+
+    const order = ['easy', 'medium', 'hard', 'expert'] as const;
+    for (let i = 0; i < order.length - 1; i++) {
+      const lowerMax = Math.max(...scores[order[i]]);
+      const higherMin = Math.min(...scores[order[i + 1]]);
+      expect(lowerMax).toBeLessThan(higherMin);
+    }
+  });
 });

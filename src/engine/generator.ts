@@ -10,7 +10,7 @@
 // the same puzzle, so "next puzzle" is just a new seed.
 
 import { createRng, type Rng } from './rng';
-import { solve } from './solver';
+import { solve, rateDifficulty } from './solver';
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
@@ -38,14 +38,39 @@ interface DifficultyParams {
 // region stops splitting once its area is <= a random threshold (max of
 // `sizeBias` draws), biasing box sizes toward the larger end.
 const PARAMS: Record<Difficulty, DifficultyParams> = {
-  easy: { minLeaf: 2, maxLeaf: 6, maxStrip: 5, sizeBias: 2, centerBias: 3, thinChance: 0.33, cluePlacement: 'center' },
-  medium: { minLeaf: 2, maxLeaf: 8, maxStrip: 7, sizeBias: 2, centerBias: 3, thinChance: 0.3, cluePlacement: 'center' },
-  hard: { minLeaf: 2, maxLeaf: 10, maxStrip: 9, sizeBias: 2, centerBias: 2, thinChance: 0.28, cluePlacement: 'random' },
-  expert: { minLeaf: 2, maxLeaf: 12, maxStrip: 12, sizeBias: 3, centerBias: 2, thinChance: 0.26, cluePlacement: 'random' },
+  easy: { minLeaf: 2, maxLeaf: 6, maxStrip: 6, sizeBias: 1, centerBias: 2, thinChance: 0.4, cluePlacement: 'center' },
+  medium: { minLeaf: 2, maxLeaf: 7, maxStrip: 8, sizeBias: 2, centerBias: 2, thinChance: 0.42, cluePlacement: 'center' },
+  hard: { minLeaf: 2, maxLeaf: 8, maxStrip: 10, sizeBias: 3, centerBias: 2, thinChance: 0.44, cluePlacement: 'center' },
+  expert: { minLeaf: 2, maxLeaf: 14, maxStrip: 12, sizeBias: 4, centerBias: 1, thinChance: 0.46, cluePlacement: 'center' },
 };
 
-const MAX_TILING_ATTEMPTS = 60;
+const MAX_TILING_ATTEMPTS = 150;
 const CLUE_TRIES_PER_TILING = 8;
+
+// Difficulty score = human-solver guesses per box, scaled x100 (see
+// rateDifficulty). Each difficulty only accepts puzzles whose score falls in
+// its band. The bands are contiguous and non-overlapping, so by construction
+// every expert puzzle is harder than every hard, every hard harder than every
+// medium, and so on — eliminating the overlap where a "medium" could out-rank
+// an "expert". Ranges are [min, max): min inclusive, max exclusive.
+const DIFFICULTY_BANDS: Record<Difficulty, { min: number; max: number }> = {
+  easy: { min: -Infinity, max: 25 },
+  medium: { min: 25, max: 38 },
+  hard: { min: 38, max: 50 },
+  expert: { min: 50, max: Infinity },
+};
+
+/** Human-solver difficulty score for a solved puzzle (guesses per box, x100). */
+function difficultyScore(clues: Clue[], solution: Rect[], width: number, height: number): number {
+  return Math.round((rateDifficulty(clues, solution, width, height) / solution.length) * 100);
+}
+
+/** How far a score sits outside a band (0 when in-band). */
+function bandDistance(score: number, band: { min: number; max: number }): number {
+  if (score < band.min) return band.min - score;
+  if (score >= band.max) return score - band.max + 1;
+  return 0;
+}
 
 /** Pick a cut offset, biased toward the center for squarer pieces. */
 function pickCut(cuts: number[], span: number, rng: Rng, centerBias: number): number {
@@ -65,7 +90,7 @@ function pickCut(cuts: number[], span: number, rng: Rng, centerBias: number): nu
 
 /** Choose which orientation to cut, preferring the longer dimension. */
 function preferVertical(w: number, h: number, rng: Rng): boolean {
-  const bias = w > h ? 0.78 : w < h ? 0.22 : 0.5;
+  const bias = w > h ? 0.64 : w < h ? 0.36 : 0.5;
   return rng.next() < bias;
 }
 
@@ -194,7 +219,12 @@ export function generate(
   const width = options.width ?? BOARD_WIDTH;
   const height = options.height ?? BOARD_HEIGHT;
   const p = PARAMS[difficulty];
+  const band = DIFFICULTY_BANDS[difficulty];
 
+  // Best unique-solvable puzzle found so far, ranked by how close its score is
+  // to the target band (used only if no perfectly in-band puzzle turns up).
+  let closest: { clues: Clue[]; solution: Rect[]; dist: number } | undefined;
+  // Any solvable puzzle at all, unique or not (last-ditch fallback).
   let fallback: { clues: Clue[]; solution: Rect[] } | undefined;
 
   for (let attempt = 0; attempt < MAX_TILING_ATTEMPTS; attempt++) {
@@ -210,18 +240,32 @@ export function generate(
       if (!fallback && result.count >= 1) {
         fallback = { clues, solution: leaves.slice() };
       }
-      if (result.count === 1) {
+      if (result.count !== 1) continue;
+
+      // Unique. Accept immediately if its difficulty lands in the target band;
+      // otherwise remember it if it is the closest-to-band puzzle so far.
+      const score = difficultyScore(clues, leaves, width, height);
+      const dist = bandDistance(score, band);
+      if (dist === 0) {
         return makePuzzle(seed, difficulty, width, height, clues, leaves);
+      }
+      if (!closest || dist < closest.dist) {
+        closest = { clues, solution: leaves.slice(), dist };
       }
     }
   }
 
-  // Fallback: return the last solvable (possibly non-unique) puzzle found.
+  // No in-band puzzle found: return the closest-scoring unique puzzle.
+  if (closest) {
+    return makePuzzle(seed, difficulty, width, height, closest.clues, closest.solution);
+  }
+
+  // Fallback: return a solvable (possibly non-unique) puzzle found.
   if (fallback) {
     return makePuzzle(seed, difficulty, width, height, fallback.clues, fallback.solution);
   }
 
-  // Extremely unlikely: retry once with easy params as a last resort.
+  // Extremely unlikely: retry once with a fresh seed as a last resort.
   return generate(seed + 1, difficulty, options);
 }
 
