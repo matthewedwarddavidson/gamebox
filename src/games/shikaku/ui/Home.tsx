@@ -30,7 +30,7 @@ export function Home() {
   return (
     <div className="home">
       <header className="home__header">
-        <h1 className="home__title">inboxes</h1>
+        <h1 className="home__title">Shikaku</h1>
         <p className="home__subtitle">Fill the grid with rectangles.</p>
       </header>
 

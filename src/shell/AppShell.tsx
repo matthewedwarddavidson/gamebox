@@ -20,7 +20,7 @@ export function AppShell() {
     <>
       <div className="shell__bar">
         <button className="btn btn--subtle shell__back" onClick={goHome}>
-          ‹ Games
+          ‹ Gamebox
         </button>
         <span className="shell__title">{game.title}</span>
       </div>

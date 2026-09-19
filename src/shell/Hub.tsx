@@ -8,7 +8,7 @@ export function Hub({ games }: { games: GameDefinition[] }) {
   return (
     <div className="app hub">
       <header className="home__header">
-        <h1 className="home__title">Games</h1>
+        <h1 className="home__title">Gamebox</h1>
         <p className="home__subtitle">Pick something to play.</p>
       </header>
 

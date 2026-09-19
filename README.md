@@ -1,19 +1,19 @@
-# inboxes
+# Gamebox
 
-I was enjoying The Economist's daily "inboxes" game but wanted a few more features so I (claude) made this browser-based recreation. It has since grown into a small collection of logic-puzzle games, each with unlimited auto-generated puzzles, a daily challenge, and personal stats.
+A small browser-based collection of newspaper-style logic-puzzle games. It started as a recreation of The Economist's daily "inboxes" (Shikaku) puzzle and has since grown into a hub of games, each with unlimited auto-generated puzzles, a daily challenge, and personal stats.
 
 ## ▶️ Play
 
-**[Play inboxes →](https://matthewedwarddavidson.github.io/inboxes/)**
+**[Play Gamebox →](https://matthewedwarddavidson.github.io/inboxes/)**
 
 Pick a game from the hub:
 
-- **inboxes** — the original [Shikaku](https://en.wikipedia.org/wiki/Shikaku):
-  partition the 8×12 grid into rectangles so each contains exactly one number
-  equal to its area.
+- **Shikaku** — the classic [Shikaku](https://en.wikipedia.org/wiki/Shikaku)
+  (as seen in The Economist's "inboxes"): partition the 8×12 grid into
+  rectangles so each contains exactly one number equal to its area.
 
 <p align="center">
-  <img src="docs/example-inboxes-game.png" alt="A completed inboxes board partitioned into coloured rectangles, each labelled with its area" width="360" />
+  <img src="docs/example-inboxes-game.png" alt="A completed Shikaku board partitioned into coloured rectangles, each labelled with its area" width="360" />
 </p>
 
 - **Battleships** — solitaire [Bimaru](<https://en.wikipedia.org/wiki/Battleship_(puzzle)>):
@@ -30,7 +30,7 @@ Every puzzle is produced deterministically from a numeric **seed**, so the
 engines are pure functions of that seed and the same seed always yields the
 exact same puzzle.
 
-- **inboxes** recursively splits the grid into rectangles, places one clue per
+- **Shikaku** recursively splits the grid into rectangles, places one clue per
   rectangle, and verifies the clue set has a unique solution — retrying with
   new sub-seeds until it does.
 - **Battleships** places a random fleet (respecting the no-touch rule), derives

@@ -1,4 +1,4 @@
-# Inboxes — common tasks
+# Gamebox — common tasks
 #
 # Quick start:  make start   (installs deps if needed, then runs the dev server)
 
@@ -48,5 +48,5 @@ clean:
 
 ## help: show available commands
 help:
-	@echo "Inboxes — available commands:"
+	@echo "Gamebox — available commands:"
 	@grep -E '^## ' $(MAKEFILE_LIST) | sed 's/## /  /'

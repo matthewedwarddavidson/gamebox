@@ -1,9 +1,9 @@
 {
-  "name": "inboxes",
+  "name": "gamebox",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A browser-based recreation of The Economist's \"inboxes\" (Shikaku) puzzle with unlimited auto-generated puzzles and personal stats.",
+  "description": "A browser-based collection of newspaper-style logic puzzle games (Shikaku, Battleships) with unlimited auto-generated puzzles, daily challenges and personal stats.",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
