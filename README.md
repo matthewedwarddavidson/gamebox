@@ -15,11 +15,14 @@ Pick a game from the hub:
   locate the hidden fleet on a 10×10 grid using the ship counts along each row
   and column. Ships never touch, not even diagonally.
 
-![A completed Shikaku board partitioned into coloured rectangles, each labelled with its area](docs/example-inboxes-game.png)
+<!-- markdownlint-disable MD033 -->
+<img src="docs/example-inboxes-game.png" alt="A completed Shikaku board partitioned into coloured rectangles, each labelled with its area" width="200" />
 _Shikaku_
 
-![A completed Battleships board](docs/example-battleships-game.png)
+<img src="docs/example-battleships-game.png" alt="A completed Battleships board" width="200" />
 _Battleships_
+<!-- markdownlint-enable MD033 -->
+
 
 ## How puzzles are generated
 
