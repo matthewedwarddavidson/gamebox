@@ -16,11 +16,11 @@ Pick a game from the hub:
   and column. Ships never touch, not even diagonally.
 
 <!-- markdownlint-disable MD033 -->
-<em>Shikaku</em>
-<img src="docs/example-inboxes-game.png" alt="A completed Shikaku board partitioned into coloured rectangles, each labelled with its area" width="200" />
+<p><em>Shikaku</em><br />
+<img src="docs/example-inboxes-game.png" alt="A completed Shikaku board partitioned into coloured rectangles, each labelled with its area" width="200" /></p>
 
-<em>Battleships</em>
-<img src="docs/example-battleships-game.png" alt="A completed Battleships board" width="200" />
+<p><em>Battleships</em><br />
+<img src="docs/example-battleships-game.png" alt="A completed Battleships board" width="200" /></p>
 <!-- markdownlint-enable MD033 -->
 
 ## How puzzles are generated
