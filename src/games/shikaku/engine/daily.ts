@@ -21,8 +21,8 @@ export interface DailyDescriptor {
 /** The daily puzzle descriptor for a given date (defaults to today, UTC). */
 export function dailyFor(date: Date = new Date()): DailyDescriptor {
   const dateKey = utcDateKey(date);
-  const seed = hashString(`inboxes-daily-${dateKey}`);
+  const seed = hashString(`shikaku-daily-${dateKey}`);
   // Difficulty derived from a separate hash so it's decorrelated from the seed.
-  const dIndex = hashString(`inboxes-daily-diff-${dateKey}`) % DIFFICULTIES.length;
+  const dIndex = hashString(`shikaku-daily-diff-${dateKey}`) % DIFFICULTIES.length;
   return { dateKey, seed, difficulty: DIFFICULTIES[dIndex] };
 }

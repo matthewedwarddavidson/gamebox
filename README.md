@@ -4,7 +4,7 @@ A small browser-based collection of newspaper-style logic-puzzle games. It start
 
 ## ▶️ Play
 
-**[Play Gamebox →](https://matthewedwarddavidson.github.io/inboxes/)**
+**[Play Gamebox →](https://matthewedwarddavidson.github.io/gamebox/)**
 
 Pick a game from the hub:
 
