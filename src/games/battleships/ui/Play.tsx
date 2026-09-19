@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useBattleships } from '../store/gameStore';
 import { Board } from './Board';
 import { capitalize, formatDuration } from './format';
+import { colorForLength } from './colors';
 import { idx, type Mark } from '../engine';
 
 /** Group a fleet list into { length, count } rows, largest first. */
@@ -161,18 +162,25 @@ export function Play() {
 
       <div className="bs-fleet">
         {groups.map((g) => {
-          const remaining = Math.max(0, g.count - (placed.get(g.len) ?? 0));
+          const found = Math.min(g.count, placed.get(g.len) ?? 0);
+          const color = colorForLength(g.len);
           return (
             <span
               key={g.len}
-              className={`bs-fleet__item ${remaining === 0 ? 'bs-fleet__item--done' : ''}`}
+              className={`bs-fleet__item ${found === g.count ? 'bs-fleet__item--done' : ''}`}
             >
               <span className="bs-fleet__ship">
                 {Array.from({ length: g.len }, (_, k) => (
-                  <span key={k} className={`bs-fleet__seg ${fleetSegClass(g.len, k)}`} />
+                  <span
+                    key={k}
+                    className={`bs-fleet__seg ${fleetSegClass(g.len, k)}`}
+                    style={{ background: color.fill, borderColor: color.stroke }}
+                  />
                 ))}
               </span>
-              <span className="bs-fleet__count">×{remaining}</span>
+              <span className="bs-fleet__count">
+                {found}/{g.count}
+              </span>
             </span>
           );
         })}

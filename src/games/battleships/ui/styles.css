@@ -51,6 +51,13 @@
   border: 1px solid var(--border);
   margin: 12px 0;
   user-select: none;
+  --bs-water-bg: #dcebf7;
+  --bs-water-dot: #8fb4d6;
+}
+
+[data-theme='dark'] .bs-board {
+  --bs-water-bg: #223247;
+  --bs-water-dot: #5b7fa3;
 }
 
 .bs-corner {
@@ -95,11 +102,17 @@
   cursor: default;
 }
 
+.bs-cell--water {
+  background: var(--bs-water-bg);
+}
+
 /* Ship segment shapes. */
 .cell__ship {
   width: 84%;
   height: 84%;
   background: var(--text);
+  border: 2px solid transparent;
+  box-sizing: border-box;
   border-radius: 18%;
 }
 
@@ -132,9 +145,9 @@
 .cell__water {
   width: 26%;
   height: 26%;
-  background: var(--muted);
+  background: var(--bs-water-dot, #8fb4d6);
   border-radius: 50%;
-  opacity: 0.5;
+  opacity: 0.8;
 }
 
 .bs-fleet {
@@ -161,9 +174,11 @@
 }
 
 .bs-fleet__seg {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   background: var(--text);
+  border: 1.5px solid transparent;
+  box-sizing: border-box;
   border-radius: 18%;
 }
 
