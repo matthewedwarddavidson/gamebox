@@ -1,0 +1,143 @@
+/* Train Tracks-specific styles. Shared design-system classes (.app, .card,
+   .btn, .chip, .badge, .win, .stat, .play, etc.) and the CSS theme variables
+   are provided globally by the app's base stylesheet. */
+
+.tt-board-wrap {
+  position: relative;
+}
+
+/* Solved banner overlaid on the board so it's visible without scrolling. */
+.tt-solved-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: color-mix(in srgb, var(--tt-board-bg) 55%, transparent);
+  backdrop-filter: blur(2px);
+  border-radius: 12px;
+  z-index: 5;
+  animation: tt-solved-in 0.18s ease-out;
+}
+
+.tt-solved-card {
+  margin: 0;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
+}
+
+@keyframes tt-solved-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.tt-board {
+  display: grid;
+  gap: 2px;
+  background: var(--tt-board-bg);
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin: 12px 0;
+  user-select: none;
+  /* Warm timber/steel track palette. */
+  --tt-board-bg: var(--surface-2);
+  --tt-bed: #c79a68;
+  --tt-rail: #6b4a2a;
+}
+
+[data-theme='dark'] .tt-board {
+  --tt-bed: #b98a5a;
+  --tt-rail: #d8b892;
+}
+
+.tt-corner {
+  aspect-ratio: 1;
+}
+
+.tt-count {
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--text);
+  font-size: clamp(0.7rem, 3.2vw, 1rem);
+  min-width: 1.4em;
+}
+
+.tt-count.done {
+  color: #3f9d4f;
+}
+
+.tt-count.over {
+  color: var(--danger);
+}
+
+.tt-cell {
+  aspect-ratio: 1;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.08s ease;
+  overflow: hidden;
+}
+
+.tt-cell:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.tt-cell--locked {
+  background: var(--surface-2);
+  cursor: default;
+}
+
+.tt-cell--track {
+  background: color-mix(in srgb, var(--tt-bed) 12%, var(--surface));
+}
+
+.tt-cell--locked.tt-cell--track {
+  background: color-mix(in srgb, var(--tt-bed) 22%, var(--surface-2));
+}
+
+/* Track glyph drawn inside a cell. */
+.tt-track {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.tt-track__bed {
+  fill: none;
+  stroke: var(--tt-bed);
+  stroke-width: 30;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tt-track__rail {
+  fill: none;
+  stroke: var(--tt-rail);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tt-hint-text {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}

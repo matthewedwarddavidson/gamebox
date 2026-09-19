@@ -14,6 +14,9 @@ Pick a game from the hub:
 - **Battleships** — solitaire [Bimaru](<https://en.wikipedia.org/wiki/Battleship_(puzzle)>):
   locate the hidden fleet on a 10×10 grid using the ship counts along each row
   and column. Ships never touch, not even diagonally.
+- **Train Tracks** — [Train Tracks](https://en.wikipedia.org/wiki/Train_Tracks_(puzzle)):
+  lay one continuous, non-branching track between two fixed border stubs, using
+  the counts of how many cells hold track in each row and column.
 
 <!-- markdownlint-disable MD033 -->
 <p><em>Shikaku</em><br />
@@ -35,6 +38,9 @@ exact same puzzle.
 - **Battleships** places a random fleet (respecting the no-touch rule), derives
   the row/column counts, then reveals the minimal set of hint cells needed to
   make the solution unique before adding a few extra hints based on difficulty.
+- **Train Tracks** carves a random self-avoiding path between two border stubs,
+  derives the row/column track counts, then reveals the minimal set of given
+  pieces needed for a unique solution (plus a few extra on easier levels).
 
 This keeps things simple and serverless:
 
@@ -181,7 +187,7 @@ identifier):
   is cleared when the tab closes and is not stored across visits, so there's no
   durable device identifier and no cross-session tracking.
 - **Games started** and **games completed**, each tagged with the game type
-  (`shikaku` / `battleships`), mode (`daily` / `free`) and difficulty.
+  (`shikaku` / `battleships` / `traintracks`), mode (`daily` / `free`) and difficulty.
 - **Solve time** (`durationMs`) on completion.
 
 From these events you can derive sessions, plays per game, difficulty

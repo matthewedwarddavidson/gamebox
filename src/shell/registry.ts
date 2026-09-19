@@ -3,8 +3,9 @@
 import type { GameDefinition } from './types';
 import { shikakuGame } from '../games/shikaku';
 import { battleshipsGame } from '../games/battleships';
+import { trainTracksGame } from '../games/traintracks';
 
-export const GAMES: GameDefinition[] = [shikakuGame, battleshipsGame];
+export const GAMES: GameDefinition[] = [shikakuGame, battleshipsGame, trainTracksGame];
 
 export function getGame(id: string): GameDefinition | undefined {
   return GAMES.find((g) => g.id === id);

@@ -16,6 +16,7 @@ dist-ssr/
 .DS_Store
 copilot-instructions.md
 .github/plans/*
+docs/adding-a-new-game.md
 
 # Logs
 npm-debug.log*
