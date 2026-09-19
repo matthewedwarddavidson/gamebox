@@ -1,5 +1,6 @@
 import { idx, isShip, type CellType, type Mark, type Puzzle } from '../engine';
 import { colorForLength } from './colors';
+import { shipFills } from './counts';
 
 interface BoardProps {
   puzzle: Puzzle;
@@ -63,16 +64,7 @@ export function Board({ puzzle, marks, hintLocked, review, onCycle }: BoardProps
   const { size, rowCounts, colCounts, solution } = puzzle;
 
   // Current ship-mark tallies per row/column for live feedback.
-  const rowFilled = new Array(size).fill(0);
-  const colFilled = new Array(size).fill(0);
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      if (marks[idx(r, c, size)] === 'ship') {
-        rowFilled[r]++;
-        colFilled[c]++;
-      }
-    }
-  }
+  const { rowFilled, colFilled } = shipFills(marks, size);
 
   const gridStyle = {
     gridTemplateColumns: `auto repeat(${size}, 1fr)`,

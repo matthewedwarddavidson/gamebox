@@ -13,6 +13,8 @@ dist-ssr/
 !.vscode/extensions.json
 .idea/
 .DS_Store
+copilot-instructions.md
+.github/plans/*
 
 # Logs
 npm-debug.log*

@@ -1,5 +1,5 @@
-// Shell chrome: the game hub and the slim top bar shown inside a game.
-// Reuses the design-system variables/classes defined in the games' styles.
+/* Shell chrome: the game hub and the slim top bar shown inside a game.
+   Reuses the design-system variables/classes defined in the games' styles. */
 
 .shell__bar {
   max-width: 560px;

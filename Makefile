@@ -3,7 +3,7 @@
 # Quick start:  make start   (installs deps if needed, then runs the dev server)
 
 .DEFAULT_GOAL := help
-.PHONY: help start dev install build preview test test-watch typecheck clean
+.PHONY: help start dev install build preview test test-watch typecheck lint clean
 
 NPM ?= npm
 
@@ -41,6 +41,10 @@ test-watch: node_modules
 ## typecheck: run the TypeScript type checker
 typecheck: node_modules
 	$(NPM) run typecheck
+
+## lint: run ESLint over the source
+lint: node_modules
+	$(NPM) run lint
 
 ## clean: remove build output and installed dependencies
 clean:

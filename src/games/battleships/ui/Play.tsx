@@ -3,16 +3,7 @@ import { useBattleships } from '../store/gameStore';
 import { Board } from './Board';
 import { capitalize, formatDuration } from './format';
 import { colorForLength } from './colors';
-import { idx, type Mark } from '../engine';
-
-/** Group a fleet list into { length, count } rows, largest first. */
-function fleetGroups(fleet: number[]): { len: number; count: number }[] {
-  const map = new Map<number, number>();
-  for (const l of fleet) map.set(l, (map.get(l) ?? 0) + 1);
-  return [...map.entries()]
-    .sort((a, b) => b[0] - a[0])
-    .map(([len, count]) => ({ len, count }));
-}
+import { fleetGroups, placedBoats } from './counts';
 
 /** Horizontal ship-shape class for a segment at index `k` within a ship of `len` cells. */
 function fleetSegClass(len: number, k: number): string {
@@ -20,50 +11,6 @@ function fleetSegClass(len: number, k: number): string {
   if (k === 0) return 'bs-fleet__seg--left';
   if (k === len - 1) return 'bs-fleet__seg--right';
   return 'bs-fleet__seg--middle';
-}
-
-/**
- * Count completed boats on the board by length: a boat is a maximal, straight
- * (horizontal or vertical) run of connected ship marks.
- */
-function placedBoats(marks: Mark[], size: number): Map<number, number> {
-  const seen = new Array(marks.length).fill(false);
-  const counts = new Map<number, number>();
-  const isShipMark = (i: number) => marks[i] === 'ship';
-
-  for (let start = 0; start < marks.length; start++) {
-    if (!isShipMark(start) || seen[start]) continue;
-    const cells: number[] = [];
-    const stack = [start];
-    seen[start] = true;
-    while (stack.length) {
-      const j = stack.pop() as number;
-      cells.push(j);
-      const r = Math.floor(j / size);
-      const c = j % size;
-      for (const [dr, dc] of [
-        [1, 0],
-        [-1, 0],
-        [0, 1],
-        [0, -1],
-      ]) {
-        const nr = r + dr;
-        const nc = c + dc;
-        if (nr < 0 || nc < 0 || nr >= size || nc >= size) continue;
-        const nj = idx(nr, nc, size);
-        if (isShipMark(nj) && !seen[nj]) {
-          seen[nj] = true;
-          stack.push(nj);
-        }
-      }
-    }
-    const rows = new Set(cells.map((j) => Math.floor(j / size)));
-    const cols = new Set(cells.map((j) => j % size));
-    if (rows.size === 1 || cols.size === 1) {
-      counts.set(cells.length, (counts.get(cells.length) ?? 0) + 1);
-    }
-  }
-  return counts;
 }
 
 export function Play() {

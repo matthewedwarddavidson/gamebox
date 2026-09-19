@@ -74,8 +74,16 @@ make test       # run the test suite
 make build      # type-check and build the production bundle
 make preview    # serve the production build
 make typecheck  # run the TypeScript type checker
+make lint       # run ESLint over the source
 make clean      # remove node_modules and dist
 make help       # list all commands
 ```
 
 </details>
+
+## Continuous integration
+
+Every push and pull request runs linting, type-checking and the full test
+suite via the [CI workflow](.github/workflows/ci.yml). The
+[deploy workflow](.github/workflows/deploy.yml) also lints, type-checks and
+tests before building, so only passing code is published to GitHub Pages.
