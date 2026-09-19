@@ -15,22 +15,11 @@ Pick a game from the hub:
   locate the hidden fleet on a 10×10 grid using the ship counts along each row
   and column. Ships never touch, not even diagonally.
 
-<table align="center">
-  <tr>
-    <td align="center">
-      <figure>
-        <img src="docs/example-inboxes-game.png" alt="A completed Shikaku board partitioned into coloured rectangles, each labelled with its area" height="300" />
-        <figcaption><sub>Shikaku</sub></figcaption>
-      </figure>
-    </td>
-    <td align="center">
-      <figure>
-        <img src="docs/example-battleships-game.png" alt="A completed battleships board" height="300" />
-        <figcaption><sub>Battleships</sub></figcaption>
-      </figure>
-    </td>
-  </tr>
-</table>
+![A completed Shikaku board partitioned into coloured rectangles, each labelled with its area](docs/example-inboxes-game.png)
+_Shikaku_
+
+![A completed Battleships board](docs/example-battleships-game.png)
+_Battleships_
 
 ## How puzzles are generated
 
@@ -66,6 +55,7 @@ This keeps things simple and serverless:
 
 ## Local development
 
+<!-- markdownlint-disable MD033 -->
 <details>
 <summary>Running the project locally</summary>
 
@@ -88,6 +78,7 @@ make help       # list all commands
 ```
 
 </details>
+<!-- markdownlint-enable MD033 -->
 
 ## Continuous integration
 
