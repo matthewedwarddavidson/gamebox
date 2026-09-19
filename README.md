@@ -16,7 +16,7 @@ Pick a game from the hub:
   and column. Ships never touch, not even diagonally.
 
 <p align="center">
-  <img src="docs/example-game.png" alt="A completed inboxes board partitioned into coloured rectangles, each labelled with its area" width="360" />
+  <img src="docs/example-inboxes-game.png" alt="A completed inboxes board partitioned into coloured rectangles, each labelled with its area" width="360" />
 </p>
 
 ## How puzzles are generated
