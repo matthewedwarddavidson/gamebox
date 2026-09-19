@@ -1,20 +1,30 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useBattleships } from '../store/gameStore';
 import { DIFFICULTIES, dailyFor, type Difficulty } from '../engine';
 import { capitalize } from './format';
+import { DailyCalendar } from './DailyCalendar';
 
 export function Home() {
   const startFree = useBattleships((s) => s.startFree);
   const startDaily = useBattleships((s) => s.startDaily);
+  const viewSolution = useBattleships((s) => s.viewSolution);
   const stats = useBattleships((s) => s.stats);
   const games = useBattleships((s) => s.games);
   const navigate = useBattleships((s) => s.navigate);
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const daily = dailyFor();
-  const todayDone = games.some(
-    (g) => g.mode === 'daily' && g.status === 'won' && g.dailyKey === daily.dateKey,
-  );
+
+  const completedKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const g of games) {
+      if (g.mode === 'daily' && g.status === 'won' && g.dailyKey) keys.add(g.dailyKey);
+    }
+    return keys;
+  }, [games]);
+
+  const todayDone = completedKeys.has(daily.dateKey);
 
   return (
     <div className="home">
@@ -31,9 +41,33 @@ export function Home() {
         <p className="muted">
           {daily.dateKey} · {capitalize(daily.difficulty)}
         </p>
-        <button className="btn btn--primary" onClick={() => startDaily()}>
-          {todayDone ? 'Replay today’s puzzle' : 'Play today’s puzzle'}
+        {todayDone ? (
+          <>
+            <button className="btn btn--primary" onClick={() => viewSolution()}>
+              View solution
+            </button>
+            <button className="btn btn--subtle" onClick={() => startDaily()}>
+              Replay today’s puzzle
+            </button>
+          </>
+        ) : (
+          <button className="btn btn--primary" onClick={() => startDaily()}>
+            Play today’s puzzle
+          </button>
+        )}
+        <button
+          className="btn btn--subtle calendar-toggle"
+          onClick={() => setShowCalendar((v) => !v)}
+          aria-expanded={showCalendar}
+        >
+          {showCalendar ? 'Hide past puzzles' : 'Play a past puzzle'}
         </button>
+        {showCalendar && (
+          <DailyCalendar
+            completedKeys={completedKeys}
+            onPick={(date, done) => (done ? viewSolution(date) : startDaily(date))}
+          />
+        )}
       </section>
 
       <section className="card">

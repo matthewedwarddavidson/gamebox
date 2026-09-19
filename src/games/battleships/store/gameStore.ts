@@ -69,6 +69,7 @@ interface GameState {
   setTool: (tool: Mark) => void;
   startFree: (difficulty: Difficulty) => void;
   startDaily: (date?: Date) => void;
+  viewSolution: (date?: Date) => void;
   nextFree: () => void;
   cycleCell: (row: number, col: number) => void;
   undo: () => void;
@@ -274,6 +275,33 @@ export const useBattleships = create<GameState>((set, get) => {
     startDaily(date) {
       const { seed, difficulty, dateKey } = dailyFor(date ?? new Date());
       beginGame(generate(seed, difficulty), 'daily', dateKey);
+    },
+
+    viewSolution(date) {
+      const { seed, difficulty, dateKey } = dailyFor(date ?? new Date());
+      const puzzle = generate(seed, difficulty);
+      const { hintLocked, solutionShip } = prepare(puzzle);
+      // Read-only review of the finished board: reveal every cell without a
+      // timer, recording, or touching any in-progress saved game.
+      const marks: Mark[] = puzzle.solution.map((t) => (isShip(t) ? 'ship' : 'water'));
+      set({
+        puzzle,
+        hintLocked,
+        solutionShip,
+        marks,
+        history: [],
+        future: [],
+        mode: 'daily',
+        dailyKey: dateKey,
+        mistakes: 0,
+        startedAt: Date.now(),
+        elapsedMs: 0,
+        running: false,
+        solved: false,
+        review: true,
+        recordId: null,
+        screen: 'play',
+      });
     },
 
     nextFree() {
