@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { useShell } from './shellStore';
 import { getGame, GAMES } from './registry';
+import { onProviderChange } from './db';
 import { Hub } from './Hub';
 
 /**
@@ -10,6 +12,11 @@ export function AppShell() {
   const activeGameId = useShell((s) => s.activeGameId);
   const goHome = useShell((s) => s.goHome);
   const game = activeGameId ? getGame(activeGameId) : undefined;
+
+  // Remount the active game when the storage backend swaps (sign-in / sign-out)
+  // so it re-initialises its state from the newly-active provider.
+  const [dataVersion, setDataVersion] = useState(0);
+  useEffect(() => onProviderChange(() => setDataVersion((v) => v + 1)), []);
 
   if (!game) {
     return <Hub games={GAMES} />;
@@ -24,7 +31,7 @@ export function AppShell() {
         </button>
         <span className="shell__title">{game.title}</span>
       </div>
-      <Root />
+      <Root key={dataVersion} />
     </>
   );
 }

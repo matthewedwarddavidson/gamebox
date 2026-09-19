@@ -7,6 +7,7 @@ dist-ssr/
 .env
 .env.*
 !.env.example
+!.env.test
 
 # Editor
 .vscode/*

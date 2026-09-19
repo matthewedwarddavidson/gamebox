@@ -24,6 +24,7 @@ import {
 } from '../../../shell/db';
 import { computeStats, emptyStats } from './stats';
 import type { GameRecord, SavedGame, Stats } from './types';
+import { trackGameCompleted, trackGameStarted } from '../../../shell/analytics';
 
 const GAME_ID = 'battleships';
 
@@ -156,6 +157,7 @@ export const useBattleships = create<GameState>((set, get) => {
       recordId: newRecordId(),
       screen: 'play',
     });
+    trackGameStarted({ game: GAME_ID, mode, difficulty: puzzle.difficulty });
     void saveCurrent();
   }
 
@@ -163,6 +165,13 @@ export const useBattleships = create<GameState>((set, get) => {
     const s = get();
     if (!s.puzzle) return;
     const durationMs = s.elapsedMs;
+
+    trackGameCompleted({
+      game: GAME_ID,
+      mode: s.mode,
+      difficulty: s.puzzle.difficulty,
+      durationMs,
+    });
 
     const alreadyWonDaily =
       s.mode === 'daily' &&

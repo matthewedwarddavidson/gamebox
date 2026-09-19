@@ -25,6 +25,7 @@ import {
 } from '../../../shell/db';
 import { computeStats, emptyStats } from './stats';
 import type { GameRecord, SavedGame, Settings, Stats } from './types';
+import { trackGameCompleted, trackGameStarted } from '../../../shell/analytics';
 
 /** This game's id in the shared persistence layer. */
 const GAME_ID = 'shikaku';
@@ -137,6 +138,7 @@ export const useGame = create<GameState>((set, get) => {
       recordId: newRecordId(),
       screen: 'play',
     });
+    trackGameStarted({ game: GAME_ID, mode, difficulty: puzzle.difficulty });
     void saveCurrent();
   }
 
@@ -146,6 +148,8 @@ export const useGame = create<GameState>((set, get) => {
     const durationMs = s.elapsedMs;
     const difficulty = s.puzzle.difficulty;
     const score = computeScore(difficulty, durationMs, s.mistakes);
+
+    trackGameCompleted({ game: GAME_ID, mode: s.mode, difficulty, durationMs });
 
     // Daily counts once: skip a new counted record if this day is already won.
     const alreadyWonDaily =

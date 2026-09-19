@@ -46,8 +46,10 @@ This keeps things simple and serverless:
 
 ## Project layout
 
-- `src/shell/` — the multi-game shell: game registry, hub screen, shared
-  IndexedDB persistence, and cross-game state.
+- `src/shell/` — the multi-game shell: game registry, hub screen, optional
+  accounts, and cross-game state. Persistence is pluggable via a
+  `PersistenceProvider` (see `src/shell/persistence/`): a local IndexedDB store
+  for guests and a Firestore store for signed-in users.
 - `src/shared/` — utilities shared by every game (e.g. the seeded RNG).
 - `src/games/<game>/` — one folder per game, each self-contained with:
   - `engine/` — pure, DOM-free game logic: puzzle generation, solver
@@ -80,11 +82,121 @@ make help       # list all commands
 ```
 
 </details>
-<!-- markdownlint-enable MD033 -->
 
 ## Continuous integration
+
+<details>
+<summary>How CI and deploys work</summary>
 
 Every push and pull request runs linting, type-checking and the full test
 suite via the [CI workflow](.github/workflows/ci.yml). The
 [deploy workflow](.github/workflows/deploy.yml) also lints, type-checks and
 tests before building, so only passing code is published to GitHub Pages.
+
+</details>
+
+## Accounts & cloud sync (optional)
+
+<details>
+<summary>Optional accounts, cloud sync and Firebase setup</summary>
+
+By default the app is fully serverless and stores your progress locally in the
+browser (IndexedDB). Optionally, it can offer accounts so you can keep your
+data across devices and browsers:
+
+- Anyone can play as a **guest** with no sign-in.
+- Signing in with **Google** or **GitHub** enables cloud sync via Firebase
+  (Firestore). Your existing guest data is merged into your account the first
+  time you sign in — game history is unioned so nothing is lost.
+
+Accounts are entirely opt-in at build time. If the `VITE_FIREBASE_*` variables
+aren't set, the sign-in UI is hidden and the app runs in local-only guest mode.
+
+### Enabling accounts (project owner)
+
+1. Create a Firebase project at <https://console.firebase.google.com/>.
+2. **Authentication → Sign-in method:** enable **Google** and **GitHub**
+   providers. For GitHub, register an OAuth app and paste its client ID/secret;
+   add the callback URL Firebase shows you.
+3. **Firestore Database:** create a database in production mode, then set this
+   security rule so each user can only read/write their own data, and so
+   anonymous usage metrics can be written but never read back:
+
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /users/{uid}/{document=**} {
+         allow read, write: if request.auth != null && request.auth.uid == uid;
+       }
+
+       // Cookieless usage analytics: create-only, never readable by clients.
+       match /metrics/{doc} {
+         allow read, update, delete: if false;
+         allow create: if isValidMetric();
+       }
+     }
+
+     function isValidMetric() {
+       let d = request.resource.data;
+       return d.type in ['visit', 'game_started', 'game_completed']
+         && d.sid is string && d.sid.size() > 0 && d.sid.size() <= 64
+         && d.keys().hasOnly(
+           ['type', 'ts', 'sid', 'game', 'mode', 'difficulty', 'durationMs', 'won']
+         );
+     }
+   }
+   ```
+
+4. **Authentication → Settings → Authorized domains:** add your GitHub Pages
+   domain (e.g. `matthewedwarddavidson.github.io`).
+5. Copy `.env.example` to `.env` and fill in the Web App config values
+   (Project settings → General → Your apps → SDK setup & config). These are
+   publishable client keys; access is controlled by the security rule above.
+   (`.env` is git-ignored; tests always run unconfigured via the committed
+   `.env.test`, so a local `.env` never affects them.)
+6. For deploys, add the same values as repository secrets and expose them to the
+   build step in the deploy workflow as `VITE_FIREBASE_*` environment variables.
+7. **Content Security Policy:** the CSP in `index.html` allow-lists the Firebase
+   domains (`firestore.googleapis.com`, the auth endpoints and the project's
+   `*.firebaseapp.com` auth frame). If you use a different Firebase project,
+   update the `frame-src` host to match your `authDomain`.
+
+</details>
+
+## Usage analytics
+
+<details>
+<summary>Cookieless usage metrics</summary>
+
+When Firebase is configured, the app records lightweight, **cookieless** usage
+metrics to a Firestore `metrics` collection. This is entirely separate from
+accounts — it works for guests too and needs no extra setup beyond the Firebase
+config and the `metrics` security rule above.
+
+What's collected (all anonymous — no personal data, no cookies, no persistent
+identifier):
+
+- **Visits & sessions** — a per-tab session id kept in `sessionStorage` only. It
+  is cleared when the tab closes and is not stored across visits, so there's no
+  durable device identifier and no cross-session tracking.
+- **Games started** and **games completed**, each tagged with the game type
+  (`shikaku` / `battleships`), mode (`daily` / `free`) and difficulty.
+- **Solve time** (`durationMs`) on completion.
+
+From these events you can derive sessions, plays per game, difficulty
+distribution and solve times; unique visitors are approximated by daily session
+counts rather than a persistent id. The browser's **Do-Not-Track** signal is
+respected — nothing is sent when it's enabled — and the collection is create-only
+and read-locked, so events can't be scraped; read them in the Firebase console
+(or via the Admin SDK). No config means no analytics, exactly like guest mode.
+
+This deliberately mirrors the approach of banner-free tools like Cloudflare Web
+Analytics and Plausible: because no cookie or persistent identifier is stored on
+the device, it's designed to avoid needing a consent banner under UK/EU PECR.
+Note that requests to Firestore expose the visitor's IP to Google (a processor),
+so a short privacy note mentioning anonymous analytics and Firebase/Google is
+still recommended.
+
+</details>
+<!-- markdownlint-enable MD033 -->
