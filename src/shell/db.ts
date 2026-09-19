@@ -8,7 +8,7 @@
 
 import { openDB, type IDBPDatabase } from 'idb';
 
-const DB_NAME = 'inboxes';
+const DB_NAME = 'gamebox';
 const DB_VERSION = 1;
 
 const STORE_GAMES = 'games';
