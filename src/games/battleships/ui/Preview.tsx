@@ -1,6 +1,8 @@
 // A simplified thumbnail of a Battleships board for the hub tile: a small grid
-// with a few ships (drawn as rounded capsules) and water dots, plus row/column
-// count strips.
+// with a few ships (drawn as rounded capsules coloured by length, with segment
+// divisions) and water dots, plus row/column count strips.
+import { colorForLength } from './colors';
+
 const CELL = 11;
 const SIZE = 5;
 
@@ -104,20 +106,56 @@ export function BattleshipsPreview() {
         );
       })}
 
-      {/* Ships as rounded capsules. */}
+      {/* Ships as rounded capsules coloured by length, with segment divisions. */}
       {SHIPS.map((s, i) => {
         const w = (s.horizontal ? s.len : 1) * CELL;
         const h = (s.horizontal ? 1 : s.len) * CELL;
+        const inset = 1.5;
+        const x = pad + s.c * CELL + inset;
+        const y = pad + s.r * CELL + inset;
+        const rw = w - inset * 2;
+        const rh = h - inset * 2;
+        const color = colorForLength(s.len);
         return (
-          <rect
-            key={`s${i}`}
-            x={pad + s.c * CELL + 1.5}
-            y={pad + s.r * CELL + 1.5}
-            width={w - 3}
-            height={h - 3}
-            rx={(Math.min(w, h) - 3) / 2}
-            fill="var(--text, #333)"
-          />
+          <g key={`s${i}`}>
+            <rect
+              x={x}
+              y={y}
+              width={rw}
+              height={rh}
+              rx={(Math.min(rw, rh)) / 2}
+              fill={color.fill}
+              stroke={color.stroke}
+              strokeWidth={0.9}
+            />
+            {/* Divider lines between adjacent ship segments. */}
+            {Array.from({ length: s.len - 1 }, (_, k) => {
+              const off = (k + 1) * CELL;
+              return s.horizontal ? (
+                <line
+                  key={`d${k}`}
+                  x1={pad + s.c * CELL + off}
+                  y1={y + rh * 0.18}
+                  x2={pad + s.c * CELL + off}
+                  y2={y + rh * 0.82}
+                  stroke={color.stroke}
+                  strokeWidth={0.7}
+                  opacity={0.7}
+                />
+              ) : (
+                <line
+                  key={`d${k}`}
+                  x1={x + rw * 0.18}
+                  y1={pad + s.r * CELL + off}
+                  x2={x + rw * 0.82}
+                  y2={pad + s.r * CELL + off}
+                  stroke={color.stroke}
+                  strokeWidth={0.7}
+                  opacity={0.7}
+                />
+              );
+            })}
+          </g>
         );
       })}
     </svg>

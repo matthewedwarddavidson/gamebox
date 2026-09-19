@@ -28,40 +28,35 @@ function centre(r: number, c: number, pad: number): [number, number] {
   return [pad + c * CELL + CELL / 2, pad + r * CELL + CELL / 2];
 }
 
+type Pt = [number, number];
+
+// Track render proportions (relative to CELL): a ballast bed with two rails.
+const BED_W = CELL * 0.42;
+const RAIL_OUTER_W = CELL * 0.3;
+const RAIL_INNER_W = CELL * 0.15;
+
 export function TrainTracksPreview() {
   const grid = SIZE * CELL;
   const pad = CELL; // room for the count strips
   const total = grid + pad;
 
-  // Build the track polyline through cell centres, extended by the two stubs.
-  const pts: [number, number][] = PATH.map(([r, c]) => centre(r, c, pad));
-  const [er, ec] = PATH[0];
-  const [xr, xc] = PATH[PATH.length - 1];
-  const entry: [number, number] = [
-    pad + ec * CELL + CELL / 2 + (ENTRY_STUB[1] * CELL) / 2,
-    pad + er * CELL + CELL / 2 + (ENTRY_STUB[0] * CELL) / 2,
-  ];
-  const exit: [number, number] = [
-    pad + xc * CELL + CELL / 2 + (EXIT_STUB[1] * CELL) / 2,
-    pad + xr * CELL + CELL / 2 + (EXIT_STUB[0] * CELL) / 2,
-  ];
-  const all: [number, number][] = [entry, ...pts, exit];
-  const d = all.map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
+  // Cell centres are the curve control points; the on-curve points are the
+  // shared cell edges (and the two border stubs), giving smooth rounded corners.
+  const centres: Pt[] = PATH.map(([r, c]) => centre(r, c, pad));
+  const [c0x, c0y] = centres[0];
+  const [cnx, cny] = centres[centres.length - 1];
 
-  // Sleepers: a short perpendicular tick at each cell centre along the track.
-  const sleeperHalf = CELL * 0.42;
-  const sleepers = all.map(([x, y], i) => {
-    const prev = all[Math.max(0, i - 1)];
-    const next = all[Math.min(all.length - 1, i + 1)];
-    let dx = next[0] - prev[0];
-    let dy = next[1] - prev[1];
-    const len = Math.hypot(dx, dy) || 1;
-    dx /= len;
-    dy /= len;
-    const nx = -dy * sleeperHalf;
-    const ny = dx * sleeperHalf;
-    return { x1: x + nx, y1: y + ny, x2: x - nx, y2: y - ny };
-  });
+  const onCurve: Pt[] = [];
+  onCurve.push([c0x + (ENTRY_STUB[1] * CELL) / 2, c0y + (ENTRY_STUB[0] * CELL) / 2]);
+  for (let i = 0; i < centres.length - 1; i++) {
+    onCurve.push([(centres[i][0] + centres[i + 1][0]) / 2, (centres[i][1] + centres[i + 1][1]) / 2]);
+  }
+  onCurve.push([cnx + (EXIT_STUB[1] * CELL) / 2, cny + (EXIT_STUB[0] * CELL) / 2]);
+
+  let d = `M ${onCurve[0][0]} ${onCurve[0][1]}`;
+  for (let i = 0; i < centres.length; i++) {
+    d += ` Q ${centres[i][0]} ${centres[i][1]} ${onCurve[i + 1][0]} ${onCurve[i + 1][1]}`;
+  }
 
   return (
     <svg
@@ -111,32 +106,20 @@ export function TrainTracksPreview() {
         </g>
       ))}
 
-      {/* The railway: ballast bed, wooden sleepers, then two steel rails. */}
+      {/* The railway: a ballast bed with two steel rails. */}
       <path
         d={d}
         fill="none"
         stroke="var(--tt-ballast, #d8c0a0)"
-        strokeWidth={6}
+        strokeWidth={BED_W}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {sleepers.map((s, i) => (
-        <line
-          key={`s${i}`}
-          x1={s.x1}
-          y1={s.y1}
-          x2={s.x2}
-          y2={s.y2}
-          stroke="var(--tt-sleeper, #8a5a34)"
-          strokeWidth={1.4}
-          strokeLinecap="round"
-        />
-      ))}
       <path
         d={d}
         fill="none"
         stroke="var(--tt-rail, #4a3826)"
-        strokeWidth={4.4}
+        strokeWidth={RAIL_OUTER_W}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -144,7 +127,7 @@ export function TrainTracksPreview() {
         d={d}
         fill="none"
         stroke="var(--tt-ballast, #d8c0a0)"
-        strokeWidth={2.2}
+        strokeWidth={RAIL_INNER_W}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
