@@ -48,6 +48,9 @@ function humanError(err: unknown): string {
   if (code === 'auth/account-exists-with-different-credential') {
     return 'That email is already linked to a different sign-in method.';
   }
+  if (code === 'auth/popup-blocked') {
+    return 'Your browser blocked the sign-in pop-up. Please allow pop-ups and try again.';
+  }
   return 'Sign-in failed. Please try again.';
 }
 
