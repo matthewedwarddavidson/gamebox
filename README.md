@@ -11,18 +11,26 @@ Pick a game from the hub:
 - **Shikaku** — the classic [Shikaku](https://en.wikipedia.org/wiki/Shikaku)
   (as seen in The Economist's "inboxes"): partition the 8×12 grid into
   rectangles so each contains exactly one number equal to its area.
-
-<p align="center">
-  <img src="docs/example-inboxes-game.png" alt="A completed Shikaku board partitioned into coloured rectangles, each labelled with its area" width="360" />
-</p>
-
 - **Battleships** — solitaire [Bimaru](<https://en.wikipedia.org/wiki/Battleship_(puzzle)>):
   locate the hidden fleet on a 10×10 grid using the ship counts along each row
   and column. Ships never touch, not even diagonally.
 
-<p align="center">
-  <img src="docs/example-battleships-game.png" alt="A completed battleships board" width="360" />
-</p>
+<table align="center">
+  <tr>
+    <td align="center">
+      <figure>
+        <img src="docs/example-inboxes-game.png" alt="A completed Shikaku board partitioned into coloured rectangles, each labelled with its area" height="300" />
+        <figcaption><sub>Shikaku</sub></figcaption>
+      </figure>
+    </td>
+    <td align="center">
+      <figure>
+        <img src="docs/example-battleships-game.png" alt="A completed battleships board" height="300" />
+        <figcaption><sub>Battleships</sub></figcaption>
+      </figure>
+    </td>
+  </tr>
+</table>
 
 ## How puzzles are generated
 
