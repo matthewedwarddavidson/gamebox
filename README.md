@@ -17,12 +17,13 @@ Pick a game from the hub:
 
 <!-- markdownlint-disable MD033 -->
 <img src="docs/example-inboxes-game.png" alt="A completed Shikaku board partitioned into coloured rectangles, each labelled with its area" width="200" />
-_Shikaku_
+<br />
+<em>Shikaku</em>
 
 <img src="docs/example-battleships-game.png" alt="A completed Battleships board" width="200" />
-_Battleships_
+<br />
+<em>Battleships</em>
 <!-- markdownlint-enable MD033 -->
-
 
 ## How puzzles are generated
 
