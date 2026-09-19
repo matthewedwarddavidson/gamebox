@@ -2,15 +2,18 @@ import { useEffect, useState } from 'react';
 import { useShell } from './shellStore';
 import { getGame, GAMES } from './registry';
 import { onProviderChange } from './db';
+import { useBreadcrumb } from './breadcrumbStore';
 import { Hub } from './Hub';
 
 /**
  * Top-level router. With no active game it shows the hub; otherwise it renders
- * the active game's Root with a slim shell bar offering a way back to the hub.
+ * the active game's Root with a slim breadcrumb bar tracing the path back to
+ * the hub.
  */
 export function AppShell() {
   const activeGameId = useShell((s) => s.activeGameId);
   const goHome = useShell((s) => s.goHome);
+  const trail = useBreadcrumb((s) => s.trail);
   const game = activeGameId ? getGame(activeGameId) : undefined;
 
   // Remount the active game when the storage backend swaps (sign-in / sign-out)
@@ -25,13 +28,29 @@ export function AppShell() {
   const Root = game.Root;
   return (
     <>
-      <div className="shell__bar">
-        <button className="btn btn--subtle shell__back" onClick={goHome}>
-          ‹ Gamebox
+      <nav className="breadcrumb" aria-label="Breadcrumb">
+        <button className="breadcrumb__crumb" onClick={goHome}>
+          Gamebox
         </button>
-        <span className="shell__title">{game.title}</span>
-      </div>
+        {trail.map((crumb, i) => (
+          <span className="breadcrumb__group" key={i}>
+            <span className="breadcrumb__sep" aria-hidden="true">
+              ›
+            </span>
+            {crumb.onClick ? (
+              <button className="breadcrumb__crumb" onClick={crumb.onClick}>
+                {crumb.label}
+              </button>
+            ) : (
+              <span className="breadcrumb__crumb breadcrumb__crumb--current" aria-current="page">
+                {crumb.label}
+              </span>
+            )}
+          </span>
+        ))}
+      </nav>
       <Root key={dataVersion} />
     </>
   );
 }
+

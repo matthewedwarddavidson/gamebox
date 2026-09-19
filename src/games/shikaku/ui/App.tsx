@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useGame } from '../store/gameStore';
+import { setBreadcrumbTrail } from '../../../shell/breadcrumbStore';
 import { Home } from './Home';
 import { Play } from './Play';
 import { StatsView } from './StatsView';
@@ -10,6 +11,7 @@ export function App() {
   const screen = useGame((s) => s.screen);
   const theme = useGame((s) => s.settings.theme);
   const init = useGame((s) => s.init);
+  const navigate = useGame((s) => s.navigate);
 
   useEffect(() => {
     void init();
@@ -18,6 +20,24 @@ export function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    if (screen === 'stats') {
+      setBreadcrumbTrail([
+        { label: 'Shikaku', onClick: () => navigate('home') },
+        { label: 'Stats' },
+      ]);
+    } else if (screen === 'settings') {
+      setBreadcrumbTrail([
+        { label: 'Shikaku', onClick: () => navigate('home') },
+        { label: 'Settings' },
+      ]);
+    } else {
+      setBreadcrumbTrail([{ label: 'Shikaku' }]);
+    }
+  }, [screen, navigate]);
+
+  useEffect(() => () => setBreadcrumbTrail([]), []);
 
   if (!ready) {
     return (

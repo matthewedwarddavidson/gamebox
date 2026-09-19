@@ -9,7 +9,6 @@ export function SettingsView() {
   const resetStats = useGame((s) => s.resetStats);
   const exportData = useGame((s) => s.exportData);
   const importData = useGame((s) => s.importData);
-  const navigate = useGame((s) => s.navigate);
 
   const [message, setMessage] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -44,13 +43,6 @@ export function SettingsView() {
 
   return (
     <div className="settings-view">
-      <header className="subheader">
-        <button className="btn btn--ghost" onClick={() => navigate('home')}>
-          ‹ Home
-        </button>
-        <h1>Settings</h1>
-      </header>
-
       <section className="card">
         <h2>Default free-play difficulty</h2>
         <div className="difficulty-picker">

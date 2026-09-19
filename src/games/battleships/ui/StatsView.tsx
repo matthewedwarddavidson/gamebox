@@ -5,7 +5,6 @@ import { capitalize, formatDuration } from './format';
 export function StatsView() {
   const stats = useBattleships((s) => s.stats);
   const games = useBattleships((s) => s.games);
-  const navigate = useBattleships((s) => s.navigate);
   const resetStats = useBattleships((s) => s.resetStats);
 
   const winRate = stats.played > 0 ? Math.round((stats.won / stats.played) * 100) : 0;
@@ -23,13 +22,6 @@ export function StatsView() {
 
   return (
     <div className="stats-view">
-      <header className="subheader">
-        <button className="btn btn--ghost" onClick={() => navigate('home')}>
-          ‹ Home
-        </button>
-        <h1>Stats</h1>
-      </header>
-
       <section className="summary-grid">
         <div className="stat card">
           <span className="stat__value">{stats.played}</span>

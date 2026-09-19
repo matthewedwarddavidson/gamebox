@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useBattleships } from '../store/gameStore';
+import { setBreadcrumbTrail } from '../../../shell/breadcrumbStore';
 import { Home } from './Home';
 import { Play } from './Play';
 import { StatsView } from './StatsView';
@@ -10,6 +11,7 @@ export function BattleshipsApp() {
   const screen = useBattleships((s) => s.screen);
   const theme = useBattleships((s) => s.theme);
   const init = useBattleships((s) => s.init);
+  const navigate = useBattleships((s) => s.navigate);
 
   useEffect(() => {
     void init();
@@ -18,6 +20,16 @@ export function BattleshipsApp() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    setBreadcrumbTrail(
+      screen === 'stats'
+        ? [{ label: 'Battleships', onClick: () => navigate('home') }, { label: 'Stats' }]
+        : [{ label: 'Battleships' }],
+    );
+  }, [screen, navigate]);
+
+  useEffect(() => () => setBreadcrumbTrail([]), []);
 
   if (!ready) {
     return (
