@@ -48,6 +48,21 @@ export function TrainTracksPreview() {
   const all: [number, number][] = [entry, ...pts, exit];
   const d = all.map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
 
+  // Sleepers: a short perpendicular tick at each cell centre along the track.
+  const sleeperHalf = CELL * 0.42;
+  const sleepers = all.map(([x, y], i) => {
+    const prev = all[Math.max(0, i - 1)];
+    const next = all[Math.min(all.length - 1, i + 1)];
+    let dx = next[0] - prev[0];
+    let dy = next[1] - prev[1];
+    const len = Math.hypot(dx, dy) || 1;
+    dx /= len;
+    dy /= len;
+    const nx = -dy * sleeperHalf;
+    const ny = dx * sleeperHalf;
+    return { x1: x + nx, y1: y + ny, x2: x - nx, y2: y - ny };
+  });
+
   return (
     <svg
       className="game-preview"
@@ -96,20 +111,40 @@ export function TrainTracksPreview() {
         </g>
       ))}
 
-      {/* The track: a wide bed with a thin centre rail. */}
+      {/* The railway: ballast bed, wooden sleepers, then two steel rails. */}
       <path
         d={d}
         fill="none"
-        stroke="var(--tt-bed, #b98a5a)"
-        strokeWidth={5}
+        stroke="var(--tt-ballast, #d8c0a0)"
+        strokeWidth={6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {sleepers.map((s, i) => (
+        <line
+          key={`s${i}`}
+          x1={s.x1}
+          y1={s.y1}
+          x2={s.x2}
+          y2={s.y2}
+          stroke="var(--tt-sleeper, #8a5a34)"
+          strokeWidth={1.4}
+          strokeLinecap="round"
+        />
+      ))}
+      <path
+        d={d}
+        fill="none"
+        stroke="var(--tt-rail, #4a3826)"
+        strokeWidth={4.4}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d={d}
         fill="none"
-        stroke="var(--tt-rail, #6b4a2a)"
-        strokeWidth={1.6}
+        stroke="var(--tt-ballast, #d8c0a0)"
+        strokeWidth={2.2}
         strokeLinecap="round"
         strokeLinejoin="round"
       />

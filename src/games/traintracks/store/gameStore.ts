@@ -32,6 +32,15 @@ export type Screen = 'home' | 'play' | 'stats';
 
 export type Theme = 'light' | 'dark';
 
+/** The active palette tool: one of the six track pieces, or the empty (cross) mark. */
+export type Tool = Piece | 'cross';
+
+/** An undo/redo snapshot of the mutable board state. */
+interface Snapshot {
+  pieces: Piece[];
+  crosses: boolean[];
+}
+
 interface StartedPuzzle {
   puzzle: Puzzle;
   locked: boolean[]; // cells fixed by a given piece
@@ -46,8 +55,10 @@ interface GameState {
   locked: boolean[];
 
   pieces: Piece[];
-  history: Piece[][];
-  future: Piece[][];
+  crosses: boolean[]; // player-annotated “no track here” marks
+  tool: Tool; // active palette selection
+  history: Snapshot[];
+  future: Snapshot[];
 
   mode: Mode;
   dailyKey?: string;
@@ -64,11 +75,13 @@ interface GameState {
 
   init: () => Promise<void>;
   navigate: (screen: Screen) => void;
+  setTool: (tool: Tool) => void;
   startFree: (difficulty: Difficulty) => void;
   startDaily: (date?: Date) => void;
   viewSolution: (date?: Date) => void;
   nextFree: () => void;
-  cycleCell: (row: number, col: number, reverse?: boolean) => void;
+  placeCell: (row: number, col: number) => void;
+  dropTool: (row: number, col: number, tool: Tool) => void;
   undo: () => void;
   redo: () => void;
   clearMarks: () => void;
@@ -81,8 +94,12 @@ function newRecordId(): string {
   return `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
 
-/** The ordered cycle of cell states the player taps through. */
-const CYCLE: Piece[] = [EMPTY, ...PIECES];
+/** The default palette tool when a game starts (first available track piece). */
+const DEFAULT_TOOL: Tool = PIECES[0];
+
+function emptyCrosses(puzzle: Puzzle): boolean[] {
+  return new Array(puzzle.size * puzzle.size).fill(false);
+}
 
 function prepare(puzzle: Puzzle): StartedPuzzle {
   const n = puzzle.size * puzzle.size;
@@ -117,6 +134,7 @@ export const useTrainTracks = create<GameState>((set, get) => {
       difficulty: s.puzzle.difficulty,
       dailyKey: s.dailyKey,
       pieces: s.pieces,
+      crosses: s.crosses,
       startedAt: s.startedAt,
       elapsedMs: s.elapsedMs,
       mistakes: s.mistakes,
@@ -136,6 +154,8 @@ export const useTrainTracks = create<GameState>((set, get) => {
       puzzle,
       locked,
       pieces,
+      crosses: emptyCrosses(puzzle),
+      tool: DEFAULT_TOOL,
       history: [],
       future: [],
       mode,
@@ -194,6 +214,56 @@ export const useTrainTracks = create<GameState>((set, get) => {
     await refreshStats();
   }
 
+  /**
+   * Apply a palette tool to a cell. `toggle` (tap) clears a cell that already
+   * holds the same mark; drag-drop always places. A mistake is only counted when
+   * an actual track piece is committed that differs from the solution.
+   */
+  function applyTool(row: number, col: number, tool: Tool, toggle: boolean): void {
+    const s = get();
+    if (!s.puzzle || s.solved || s.review) return;
+    const i = idx(row, col, s.puzzle.size);
+    if (s.locked[i]) return;
+
+    const pieces = s.pieces.slice();
+    const crosses = s.crosses.slice();
+
+    if (tool === 'cross') {
+      if (toggle && crosses[i]) {
+        crosses[i] = false;
+      } else {
+        crosses[i] = true;
+        pieces[i] = EMPTY;
+      }
+    } else if (toggle && pieces[i] === tool) {
+      pieces[i] = EMPTY;
+    } else {
+      pieces[i] = tool;
+      crosses[i] = false;
+    }
+
+    // Skip no-op interactions (e.g. dropping a piece already present).
+    if (pieces[i] === s.pieces[i] && crosses[i] === s.crosses[i]) return;
+
+    let mistakes = s.mistakes;
+    const placed = tool !== 'cross' && pieces[i] === tool;
+    if (placed && tool !== s.puzzle.solution[i]) mistakes++;
+
+    set({
+      pieces,
+      crosses,
+      history: [...s.history, { pieces: s.pieces, crosses: s.crosses }],
+      future: [],
+      mistakes,
+    });
+
+    if (isWin(pieces, s.puzzle.solution)) {
+      void finishGame();
+    } else {
+      void saveCurrent();
+    }
+  }
+
   return {
     ready: false,
     screen: 'home',
@@ -201,6 +271,8 @@ export const useTrainTracks = create<GameState>((set, get) => {
     puzzle: null,
     locked: [],
     pieces: [],
+    crosses: [],
+    tool: DEFAULT_TOOL,
     history: [],
     future: [],
     mode: 'free',
@@ -236,10 +308,16 @@ export const useTrainTracks = create<GameState>((set, get) => {
         for (let i = 0; i < pieces.length; i++) {
           if (!locked[i] && saved.pieces[i] !== undefined) pieces[i] = saved.pieces[i];
         }
+        const crosses = emptyCrosses(puzzle);
+        for (let i = 0; i < crosses.length; i++) {
+          if (!locked[i] && saved.crosses?.[i]) crosses[i] = true;
+        }
         set({
           puzzle,
           locked,
           pieces,
+          crosses,
+          tool: DEFAULT_TOOL,
           mode: saved.mode,
           dailyKey: saved.dailyKey,
           mistakes: saved.mistakes,
@@ -259,6 +337,10 @@ export const useTrainTracks = create<GameState>((set, get) => {
 
     navigate(screen) {
       set({ screen });
+    },
+
+    setTool(tool) {
+      set({ tool });
     },
 
     startFree(difficulty) {
@@ -281,6 +363,8 @@ export const useTrainTracks = create<GameState>((set, get) => {
         puzzle,
         locked,
         pieces: puzzle.solution.slice(),
+        crosses: emptyCrosses(puzzle),
+        tool: DEFAULT_TOOL,
         history: [],
         future: [],
         mode: 'daily',
@@ -303,35 +387,13 @@ export const useTrainTracks = create<GameState>((set, get) => {
       beginGame(generate(seed, difficulty), 'free');
     },
 
-    cycleCell(row, col, reverse = false) {
-      const s = get();
-      if (!s.puzzle || s.solved || s.review) return;
-      const i = idx(row, col, s.puzzle.size);
-      if (s.locked[i]) return;
+    placeCell(row, col) {
+      applyTool(row, col, get().tool, true);
+    },
 
-      const cur = CYCLE.indexOf(s.pieces[i]);
-      const at = cur < 0 ? 0 : cur;
-      const nextIdx = (at + (reverse ? -1 : 1) + CYCLE.length) % CYCLE.length;
-      const next = CYCLE[nextIdx];
-
-      const pieces = s.pieces.slice();
-      pieces[i] = next;
-
-      let mistakes = s.mistakes;
-      if (next !== EMPTY && next !== s.puzzle.solution[i]) mistakes++;
-
-      set({
-        pieces,
-        history: [...s.history, s.pieces],
-        future: [],
-        mistakes,
-      });
-
-      if (isWin(pieces, s.puzzle.solution)) {
-        void finishGame();
-      } else {
-        void saveCurrent();
-      }
+    dropTool(row, col, tool) {
+      set({ tool });
+      applyTool(row, col, tool, false);
     },
 
     undo() {
@@ -339,11 +401,12 @@ export const useTrainTracks = create<GameState>((set, get) => {
       if (s.history.length === 0 || !s.puzzle) return;
       const prev = s.history[s.history.length - 1];
       set({
-        pieces: prev,
+        pieces: prev.pieces,
+        crosses: prev.crosses,
         history: s.history.slice(0, -1),
-        future: [s.pieces, ...s.future],
+        future: [{ pieces: s.pieces, crosses: s.crosses }, ...s.future],
       });
-      if (!s.solved && isWin(prev, s.puzzle.solution)) {
+      if (!s.solved && isWin(prev.pieces, s.puzzle.solution)) {
         void finishGame();
       } else {
         void saveCurrent();
@@ -355,11 +418,12 @@ export const useTrainTracks = create<GameState>((set, get) => {
       if (s.future.length === 0 || !s.puzzle) return;
       const next = s.future[0];
       set({
-        pieces: next,
-        history: [...s.history, s.pieces],
+        pieces: next.pieces,
+        crosses: next.crosses,
+        history: [...s.history, { pieces: s.pieces, crosses: s.crosses }],
         future: s.future.slice(1),
       });
-      if (!s.solved && isWin(next, s.puzzle.solution)) {
+      if (!s.solved && isWin(next.pieces, s.puzzle.solution)) {
         void finishGame();
       } else {
         void saveCurrent();
@@ -370,7 +434,13 @@ export const useTrainTracks = create<GameState>((set, get) => {
       const s = get();
       if (!s.puzzle || s.review) return;
       const pieces = initialPieces(s.puzzle);
-      set({ pieces, history: [...s.history, s.pieces], future: [] });
+      const crosses = emptyCrosses(s.puzzle);
+      set({
+        pieces,
+        crosses,
+        history: [...s.history, { pieces: s.pieces, crosses: s.crosses }],
+        future: [],
+      });
       void saveCurrent();
     },
 

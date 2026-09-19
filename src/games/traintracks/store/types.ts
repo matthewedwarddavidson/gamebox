@@ -26,6 +26,7 @@ export interface SavedGame extends StoredSavedGame {
   difficulty: Difficulty;
   dailyKey?: string;
   pieces: Piece[];
+  crosses: boolean[];
   startedAt: number;
   elapsedMs: number;
   mistakes: number;

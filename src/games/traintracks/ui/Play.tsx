@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { useTrainTracks } from '../store/gameStore';
 import { Board } from './Board';
+import { Palette } from './Palette';
 import { capitalize, formatDuration } from './format';
 
 export function Play() {
   const puzzle = useTrainTracks((s) => s.puzzle);
   const pieces = useTrainTracks((s) => s.pieces);
+  const crosses = useTrainTracks((s) => s.crosses);
   const locked = useTrainTracks((s) => s.locked);
   const review = useTrainTracks((s) => s.review);
   const mode = useTrainTracks((s) => s.mode);
@@ -14,7 +16,10 @@ export function Play() {
   const solved = useTrainTracks((s) => s.solved);
   const running = useTrainTracks((s) => s.running);
 
-  const cycleCell = useTrainTracks((s) => s.cycleCell);
+  const tool = useTrainTracks((s) => s.tool);
+  const setTool = useTrainTracks((s) => s.setTool);
+  const placeCell = useTrainTracks((s) => s.placeCell);
+  const dropTool = useTrainTracks((s) => s.dropTool);
   const undo = useTrainTracks((s) => s.undo);
   const redo = useTrainTracks((s) => s.redo);
   const clearMarks = useTrainTracks((s) => s.clearMarks);
@@ -56,9 +61,11 @@ export function Play() {
         <Board
           puzzle={puzzle}
           pieces={pieces}
+          crosses={crosses}
           locked={locked}
           review={review}
-          onCycle={cycleCell}
+          onPlace={placeCell}
+          onDrop={dropTool}
         />
 
         {solved && (
@@ -82,6 +89,8 @@ export function Play() {
         )}
       </div>
 
+      {!review && <Palette tool={tool} onSelect={setTool} />}
+
       {!review && (
         <div className="play__controls">
           <button className="btn" onClick={undo} disabled={!canUndo}>
@@ -97,8 +106,9 @@ export function Play() {
       )}
 
       <p className="muted tt-hint-text">
-        Tap a cell to cycle through the track pieces; right-click (or long-press)
-        to cycle back. The counts show how many cells hold track in each row and
+        Pick a track piece (or the ✕ to mark a cell empty), then tap a cell to
+        place it — or drag a piece straight onto the board. Tap a cell again to
+        clear it. The counts show how many cells hold track in each row and
         column. Build one continuous track between the two border stubs.
       </p>
     </div>
