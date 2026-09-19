@@ -162,12 +162,13 @@ export function Play() {
 
       <div className="bs-fleet">
         {groups.map((g) => {
-          const found = Math.min(g.count, placed.get(g.len) ?? 0);
+          const found = placed.get(g.len) ?? 0;
           const color = colorForLength(g.len);
+          const state = found === g.count ? 'bs-fleet__item--done' : found > g.count ? 'bs-fleet__item--over' : '';
           return (
             <span
               key={g.len}
-              className={`bs-fleet__item ${found === g.count ? 'bs-fleet__item--done' : ''}`}
+              className={`bs-fleet__item ${state}`}
             >
               <span className="bs-fleet__ship">
                 {Array.from({ length: g.len }, (_, k) => (
