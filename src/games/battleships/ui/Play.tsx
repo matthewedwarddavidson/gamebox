@@ -145,7 +145,7 @@ export function Play() {
               <h2>Solved! 🎉</h2>
               <p className="muted">
                 {capitalize(puzzle.difficulty)} · {formatDuration(elapsedMs)} · {mistakes}{' '}
-                mistakes
+                {mistakes === 1 ? 'mistake' : 'mistakes'}
               </p>
               <div className="win__actions">
                 <button className="btn btn--primary" onClick={nextFree}>

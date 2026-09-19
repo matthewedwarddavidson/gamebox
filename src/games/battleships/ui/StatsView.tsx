@@ -93,7 +93,7 @@ export function StatsView() {
                 <span className="badge">{g.mode === 'daily' ? 'Daily' : 'Free'}</span>
                 <span>{capitalize(g.difficulty)}</span>
                 <span>{g.durationMs !== undefined ? formatDuration(g.durationMs) : '—'}</span>
-                <span className="muted">{g.mistakes} mistakes</span>
+                <span className="muted">{g.mistakes} {g.mistakes === 1 ? 'mistake' : 'mistakes'}</span>
               </li>
             ))}
           </ul>
