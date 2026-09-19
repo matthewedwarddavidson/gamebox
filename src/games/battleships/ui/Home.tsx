@@ -8,6 +8,7 @@ export function Home() {
   const startDaily = useBattleships((s) => s.startDaily);
   const stats = useBattleships((s) => s.stats);
   const games = useBattleships((s) => s.games);
+  const navigate = useBattleships((s) => s.navigate);
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
 
   const daily = dailyFor();
@@ -67,6 +68,10 @@ export function Home() {
           <span className="stat__label">Streak</span>
         </div>
       </section>
+
+      <button className="btn" onClick={() => navigate('stats')}>
+        View stats
+      </button>
     </div>
   );
 }

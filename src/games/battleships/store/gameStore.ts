@@ -27,7 +27,7 @@ import type { GameRecord, SavedGame, Stats } from './types';
 
 const GAME_ID = 'battleships';
 
-export type Screen = 'home' | 'play';
+export type Screen = 'home' | 'play' | 'stats';
 
 export type Theme = 'light' | 'dark';
 

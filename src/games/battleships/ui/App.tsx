@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useBattleships } from '../store/gameStore';
 import { Home } from './Home';
 import { Play } from './Play';
+import { StatsView } from './StatsView';
 import './styles.css';
 
 export function BattleshipsApp() {
@@ -30,6 +31,7 @@ export function BattleshipsApp() {
     <div className="app">
       {screen === 'home' && <Home />}
       {screen === 'play' && <Play />}
+      {screen === 'stats' && <StatsView />}
     </div>
   );
 }
