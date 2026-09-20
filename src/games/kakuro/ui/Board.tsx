@@ -21,12 +21,12 @@ function ClueCell({ right, down }: { right?: number; down?: number }) {
       <svg viewBox="0 0 100 100" className="kk-clue" aria-hidden="true">
         <line x1="0" y1="0" x2="100" y2="100" className="kk-clue__slash" />
         {right !== undefined && (
-          <text x="72" y="30" className="kk-clue__num kk-clue__num--right">
+          <text x="73" y="38" className="kk-clue__num kk-clue__num--right">
             {right}
           </text>
         )}
         {down !== undefined && (
-          <text x="28" y="76" className="kk-clue__num kk-clue__num--down">
+          <text x="27" y="86" className="kk-clue__num kk-clue__num--down">
             {down}
           </text>
         )}

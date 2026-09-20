@@ -49,7 +49,7 @@ function solutionShapeValid(p: Puzzle): boolean {
 describe('kakuro generator', () => {
   for (const difficulty of DIFFICULTIES) {
     it(`produces valid, uniquely solvable ${difficulty} puzzles`, () => {
-      for (let seed = 1; seed <= 6; seed++) {
+      for (let seed = 1; seed <= 12; seed++) {
         const p = generate(seed, difficulty);
         expect(p.size).toBe(SIZE_FOR[difficulty]);
         expect(p.cells).toHaveLength(p.size * p.size);
@@ -63,6 +63,17 @@ describe('kakuro generator', () => {
       }
     });
   }
+
+  it('builds full-size grids with a good share of white cells', () => {
+    for (const difficulty of DIFFICULTIES) {
+      for (let seed = 1; seed <= 6; seed++) {
+        const p = generate(seed, difficulty);
+        const interior = (p.size - 1) ** 2;
+        const whites = p.cells.filter((c) => c.fill).length;
+        expect(whites).toBeGreaterThanOrEqual(interior * 0.55);
+      }
+    }
+  });
 
   it('is deterministic for a given seed and difficulty', () => {
     const a = generate(42, 'medium');

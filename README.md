@@ -27,6 +27,12 @@ Pick a game from the hub:
 
 <p><em>Battleships</em><br />
 <img src="docs/example-battleships-game.png" alt="A completed Battleships board" width="200" /></p>
+
+<p><em>Train Tracks</em><br />
+<img src="docs/example-traintracks-game.png" alt="A completed Train Tracks board with a single continuous track between two border stubs" width="200" /></p>
+
+<p><em>Kakuro</em><br />
+<img src="docs/example-kakuro-game.png" alt="A completed Kakuro board with clue sums in the black cells" width="200" /></p>
 <!-- markdownlint-enable MD033 -->
 
 ## How puzzles are generated
@@ -44,9 +50,12 @@ exact same puzzle.
 - **Train Tracks** carves a random self-avoiding path between two border stubs,
   derives the row/column track counts, then reveals the minimal set of given
   pieces needed for a unique solution (plus a few extra on easier levels).
-- **Kakuro** lays out a connected band of short runs, fills it with digits that
-  are distinct within each run, derives the clue sums, then anneals individual
-  digits until the solver finds exactly one solution.
+- **Kakuro** scatters black blocks over a grid (7×7 to 9×9) so every run is
+  2–8 cells long and the white region is connected, fills it with digits that
+  are distinct within each run, and derives the clue sums. It then anneals the
+  digits until basic run-sum logic can resolve every cell, and finally checks
+  with a solver that the solution is unique (blacking out any cell where a
+  second solution disagrees).
 
 This keeps things simple and serverless:
 

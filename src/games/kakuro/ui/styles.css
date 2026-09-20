@@ -58,7 +58,7 @@
 
 .kk-clue__num {
   fill: #fff;
-  font-size: 30px;
+  font-size: 38px;
   font-weight: 700;
 }
 
@@ -100,7 +100,7 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
-  margin: 12px auto 0;
+  margin: 12px auto;
   width: min(92vw, 460px);
 }
 

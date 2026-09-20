@@ -15,9 +15,9 @@ export type Mode = 'daily' | 'free';
 
 /** Grid size per difficulty (square, including the header row and column). */
 export const SIZE_FOR: Record<Difficulty, number> = {
-  easy: 5,
-  medium: 6,
-  hard: 7,
+  easy: 7,
+  medium: 8,
+  hard: 9,
 };
 
 /**
