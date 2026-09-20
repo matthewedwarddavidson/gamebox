@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useBattleships } from '../store/gameStore';
 import { setBreadcrumbTrail } from '../../../shell/breadcrumbStore';
+import { requestLeave, setLeaveGuard } from '../../../shell/leaveGuard';
 import { Home } from './Home';
 import { Play } from './Play';
 import { StatsView } from './StatsView';
@@ -12,6 +13,7 @@ export function BattleshipsApp() {
   const theme = useBattleships((s) => s.theme);
   const init = useBattleships((s) => s.init);
   const navigate = useBattleships((s) => s.navigate);
+  const abandon = useBattleships((s) => s.abandon);
 
   useEffect(() => {
     void init();
@@ -21,13 +23,27 @@ export function BattleshipsApp() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
+  // While a puzzle is unfinished, leaving it (by any route) goes through the guard.
+  const inProgress = useBattleships((s) => s.screen === 'play' && s.puzzle !== null && !s.solved && !s.review);
+  // Dailies are exempt from the forfeit warning: leaving one just pauses it.
+  const isDaily = useBattleships((s) => s.mode === 'daily');
   useEffect(() => {
-    setBreadcrumbTrail(
-      screen === 'stats'
-        ? [{ label: 'Battleships', onClick: () => navigate('home') }, { label: 'Stats' }]
-        : [{ label: 'Battleships' }],
-    );
-  }, [screen, navigate]);
+    setLeaveGuard(inProgress ? { warn: !isDaily, onLeave: abandon } : null);
+    return () => setLeaveGuard(null);
+  }, [inProgress, isDaily, abandon]);
+
+  useEffect(() => {
+    if (screen === 'stats') {
+      setBreadcrumbTrail([{ label: 'Battleships', onClick: () => navigate('home') }, { label: 'Stats' }]);
+    } else if (screen === 'play') {
+      setBreadcrumbTrail([
+        { label: 'Battleships', onClick: () => requestLeave(abandon) },
+        { label: 'Play' },
+      ]);
+    } else {
+      setBreadcrumbTrail([{ label: 'Battleships' }]);
+    }
+  }, [screen, navigate, abandon]);
 
   useEffect(() => () => setBreadcrumbTrail([]), []);
 

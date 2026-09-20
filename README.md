@@ -21,6 +21,11 @@ Pick a game from the hub:
   crossword: fill each run of white cells with the digits 1–9, no repeats, so
   that it adds up to the clue in the black cell at its start.
 
+Leaving a free-play puzzle unfinished asks you to confirm and counts as a
+forfeit, which is recorded as a loss in your stats. Daily puzzles are exempt:
+leaving one just pauses it, and "Resume today's puzzle" picks it back up.
+Refreshing the page always resumes where you were.
+
 Each game has its own stats screen, and the hub's **Your stats** page combines
 them: totals, a daily streak across all games, time spent solving, a per-game
 breakdown and recent wins.

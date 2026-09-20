@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { requestLeave } from '../../../shell/leaveGuard';
 import { useBattleships } from '../store/gameStore';
 import { Board } from './Board';
 import { capitalize, formatDuration } from './format';
@@ -66,7 +67,7 @@ export function Play() {
   return (
     <div className="play">
       <header className="play__bar">
-        <button className="btn btn--ghost" onClick={abandon} aria-label="Back to home">
+        <button className="btn btn--ghost" onClick={() => requestLeave(abandon)} aria-label="Back to home">
           ‹ Home
         </button>
         <div className="play__meta">

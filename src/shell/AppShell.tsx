@@ -6,6 +6,8 @@ import { useBreadcrumb } from './breadcrumbStore';
 import { Hub } from './Hub';
 import { Breadcrumb } from './Breadcrumb';
 import { OverallStatsView } from './OverallStatsView';
+import { LeaveDialog } from './LeaveDialog';
+import { requestLeave } from './leaveGuard';
 
 /**
  * Top-level router. With no active game it shows the hub; otherwise it renders
@@ -39,8 +41,9 @@ export function AppShell() {
   const Root = game.Root;
   return (
     <>
-      <Breadcrumb trail={trail} onHome={goHome} />
+      <Breadcrumb trail={trail} onHome={() => requestLeave(goHome)} />
       <Root key={dataVersion} />
+      <LeaveDialog />
     </>
   );
 }

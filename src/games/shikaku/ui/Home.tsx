@@ -16,6 +16,14 @@ export function Home() {
   const [difficulty, setDifficulty] = useState<Difficulty>(defaultDifficulty);
   const [showCalendar, setShowCalendar] = useState(false);
   const daily = dailyFor();
+  const dailyPaused = useGame(
+    (s) =>
+      s.puzzle !== null &&
+      s.mode === 'daily' &&
+      s.dailyKey === daily.dateKey &&
+      !s.solved &&
+      !s.review,
+  );
 
   const completedKeys = useMemo(() => {
     const keys = new Set<string>();
@@ -53,7 +61,7 @@ export function Home() {
           </>
         ) : (
           <button className="btn btn--primary" onClick={() => startDaily()}>
-            Play today’s puzzle
+            {dailyPaused ? 'Resume' : 'Play'} today’s puzzle
           </button>
         )}
         <button

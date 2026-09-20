@@ -159,6 +159,27 @@ export const useKakuro = create<GameState>((set, get) => {
     void saveCurrent();
   }
 
+  /** Record leaving an unfinished puzzle as a forfeit, which counts against the player. */
+  async function recordForfeit(s: GameState): Promise<void> {
+    if (!s.puzzle || !s.recordId) return;
+    const record: GameRecord = {
+      id: s.recordId,
+      game: GAME_ID,
+      seed: s.puzzle.seed,
+      mode: s.mode,
+      difficulty: s.puzzle.difficulty,
+      startedAt: s.startedAt,
+      finishedAt: Date.now(),
+      durationMs: s.elapsedMs,
+      status: 'abandoned',
+      mistakes: s.mistakes,
+      dailyKey: s.dailyKey,
+    };
+    await putGameRecord(record);
+    await clearSavedGame(GAME_ID);
+    await refreshStats();
+  }
+
   async function finishGame(): Promise<void> {
     const s = get();
     if (!s.puzzle) return;
@@ -347,6 +368,19 @@ export const useKakuro = create<GameState>((set, get) => {
 
     startDaily(date) {
       const { seed, difficulty, dateKey } = dailyFor(date ?? new Date());
+      const s = get();
+      if (
+        s.puzzle !== null &&
+        s.mode === 'daily' &&
+        s.dailyKey === dateKey &&
+        !s.solved &&
+        !s.review &&
+        s.recordId !== null
+      ) {
+        // This daily was paused when the player left: carry on where they were.
+        set({ screen: 'play', running: true, startedAt: Date.now() - s.elapsedMs });
+        return;
+      }
       beginGame(generate(seed, difficulty), 'daily', dateKey);
     },
 
@@ -481,9 +515,22 @@ export const useKakuro = create<GameState>((set, get) => {
 
     abandon() {
       const s = get();
-      set({ running: false });
-      if (s.puzzle && !s.solved && !s.review) void clearSavedGame(GAME_ID);
-      set({ screen: 'home', review: false });
+      const unfinished = s.puzzle !== null && !s.solved && !s.review && s.recordId !== null;
+      if (unfinished && s.mode === 'daily') {
+        // Dailies are exempt from forfeits (everyone gets the same puzzle, so
+        // there is nothing to reroll): pause instead, keeping the progress so
+        // the player can pick it up again.
+        set({
+          running: false,
+          elapsedMs: s.running ? Date.now() - s.startedAt : s.elapsedMs,
+          screen: 'home',
+        });
+        void saveCurrent();
+        return;
+      }
+      // Leaving any other unfinished puzzle forfeits it; finished or review boards just close.
+      set({ running: false, recordId: null, screen: 'home', review: false });
+      if (unfinished) void recordForfeit(s);
     },
 
     async resetStats() {

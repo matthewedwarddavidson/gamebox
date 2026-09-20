@@ -15,6 +15,14 @@ export function Home() {
   const [showCalendar, setShowCalendar] = useState(false);
 
   const daily = dailyFor();
+  const dailyPaused = useBattleships(
+    (s) =>
+      s.puzzle !== null &&
+      s.mode === 'daily' &&
+      s.dailyKey === daily.dateKey &&
+      !s.solved &&
+      !s.review,
+  );
 
   const completedKeys = useMemo(() => {
     const keys = new Set<string>();
@@ -52,7 +60,7 @@ export function Home() {
           </>
         ) : (
           <button className="btn btn--primary" onClick={() => startDaily()}>
-            Play today’s puzzle
+            {dailyPaused ? 'Resume' : 'Play'} today’s puzzle
           </button>
         )}
         <button

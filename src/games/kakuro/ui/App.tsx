@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useKakuro } from '../store/gameStore';
 import { setBreadcrumbTrail } from '../../../shell/breadcrumbStore';
+import { requestLeave, setLeaveGuard } from '../../../shell/leaveGuard';
 import { Home } from './Home';
 import { Play } from './Play';
 import { StatsView } from './StatsView';
@@ -22,6 +23,15 @@ export function KakuroApp() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
+  // While a puzzle is unfinished, leaving it (by any route) goes through the guard.
+  const inProgress = useKakuro((s) => s.screen === 'play' && s.puzzle !== null && !s.solved && !s.review);
+  // Dailies are exempt from the forfeit warning: leaving one just pauses it.
+  const isDaily = useKakuro((s) => s.mode === 'daily');
+  useEffect(() => {
+    setLeaveGuard(inProgress ? { warn: !isDaily, onLeave: abandon } : null);
+    return () => setLeaveGuard(null);
+  }, [inProgress, isDaily, abandon]);
+
   useEffect(() => {
     if (screen === 'stats') {
       setBreadcrumbTrail([
@@ -29,7 +39,7 @@ export function KakuroApp() {
         { label: 'Stats' },
       ]);
     } else if (screen === 'play') {
-      setBreadcrumbTrail([{ label: 'Kakuro', onClick: abandon }, { label: 'Play' }]);
+      setBreadcrumbTrail([{ label: 'Kakuro', onClick: () => requestLeave(abandon) }, { label: 'Play' }]);
     } else {
       setBreadcrumbTrail([{ label: 'Kakuro' }]);
     }
