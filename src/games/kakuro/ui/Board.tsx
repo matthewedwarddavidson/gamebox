@@ -77,7 +77,7 @@ export function Board({ puzzle, digits, notes, selected, review, onSelect }: Boa
   } as React.CSSProperties;
 
   return (
-    <div className="kk-board" style={gridStyle}>
+    <div className="kk-board board-frame" style={gridStyle}>
       {cells.map((cell, i) => {
         if (!cell.fill) return (
             <ClueCell

@@ -105,7 +105,7 @@ export function Play() {
         </div>
       )}
 
-      <p className="muted tt-hint-text">
+      <p className="play__hint muted">
         Pick a track piece (or the ✕ to mark a cell empty), then tap a cell to
         place it — or drag a piece straight onto the board. Tap a cell again to
         clear it. The counts show how many cells hold track in each row and

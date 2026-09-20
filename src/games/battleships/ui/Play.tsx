@@ -1,5 +1,4 @@
 import { useEffect, useMemo } from 'react';
-import { requestLeave } from '../../../shell/leaveGuard';
 import { useBattleships } from '../store/gameStore';
 import { Board } from './Board';
 import { capitalize, formatDuration } from './format';
@@ -30,7 +29,6 @@ export function Play() {
   const redo = useBattleships((s) => s.redo);
   const clearMarks = useBattleships((s) => s.clearMarks);
   const tick = useBattleships((s) => s.tick);
-  const abandon = useBattleships((s) => s.abandon);
   const nextFree = useBattleships((s) => s.nextFree);
   const navigate = useBattleships((s) => s.navigate);
 
@@ -66,17 +64,12 @@ export function Play() {
 
   return (
     <div className="play">
-      <header className="play__bar">
-        <button className="btn btn--ghost" onClick={() => requestLeave(abandon)} aria-label="Back to home">
-          ‹ Home
-        </button>
-        <div className="play__meta">
-          <span className="badge">{mode === 'daily' ? 'Daily' : 'Free'}</span>
-          <span className="badge">{capitalize(puzzle.difficulty)}</span>
-          <span className="badge">⏱ {formatDuration(elapsedMs)}</span>
-          <span className="badge badge--warn">✖ {mistakes}</span>
-        </div>
-      </header>
+      <div className="play__meta">
+        <span className="badge">{mode === 'daily' ? 'Daily' : 'Free'}</span>
+        <span className="badge">{capitalize(puzzle.difficulty)}</span>
+        <span className="badge">⏱ {formatDuration(elapsedMs)}</span>
+        <span className="badge badge--warn">✖ {mistakes}</span>
+      </div>
 
       <div className="bs-board-wrap">
         <Board
@@ -172,7 +165,7 @@ export function Play() {
         </div>
       )}
 
-      <p className="muted bs-hint-text">
+      <p className="play__hint muted">
         Pick Ship or Water, then tap cells to place or clear that mark. Ships
         never touch, even diagonally.
       </p>

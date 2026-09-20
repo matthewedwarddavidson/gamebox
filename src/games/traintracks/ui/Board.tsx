@@ -119,7 +119,7 @@ export function Board({ puzzle, pieces, crosses, locked, review, onPlace, onDrop
   } as React.CSSProperties;
 
   return (
-    <div className="tt-board" style={gridStyle}>
+    <div className="tt-board board-frame" style={gridStyle}>
       <div className="tt-corner" />
       {Array.from({ length: size }, (_, c) => {
         const state =

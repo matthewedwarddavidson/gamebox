@@ -2,12 +2,6 @@
    .chip, .badge, .win, .stat, .play, etc.) and the CSS theme variables are
    provided globally by the app's base stylesheet. */
 
-.app.kk-app {
-  /* The shell's breadcrumb already sits above the game, so a full-height page
-     would always scroll by the breadcrumb's height. */
-  min-height: 0;
-}
-
 .kk-play {
   /* Board and number pad share one width: as wide as the screen allows, but
      no taller than leaves room for the rest of the screen in the viewport. */
@@ -18,13 +12,9 @@
   position: relative;
 }
 
-.kk-board {
+.kk-board.board-frame {
   display: grid;
   gap: 2px;
-  background: var(--kk-grid-line, var(--border));
-  padding: 2px;
-  border-radius: 10px;
-  border: 2px solid var(--kk-grid-line, var(--border));
   margin: 8px auto;
   width: var(--kk-size, min(92vw, 460px));
   aspect-ratio: 1;
@@ -36,7 +26,7 @@
   --kk-met: #2a8a41;
 }
 
-[data-theme='dark'] .kk-board {
+[data-theme='dark'] .kk-board.board-frame {
   --kk-clue-bg: #2f3557;
   --kk-clue-ink: #dfe4ff;
   --kk-clue-line: rgba(255, 255, 255, 0.3);
@@ -219,10 +209,4 @@
     opacity: 1;
     transform: scale(1);
   }
-}
-
-.kk-hint-text {
-  margin-top: 8px;
-  font-size: 0.8rem;
-  line-height: 1.4;
 }

@@ -146,7 +146,7 @@ export function Play() {
         </div>
       )}
 
-      <p className="muted kk-hint-text">
+      <p className="play__hint muted">
         Tap a white cell, then pick a digit. Each run uses 1–9 without repeats and adds up to
         its clue. Keys: 1–9, arrows, Backspace, N for notes.
       </p>

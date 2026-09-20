@@ -45,11 +45,6 @@
 .bs-board {
   display: grid;
   gap: 2px;
-  background: var(--board-bg);
-  padding: 8px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  margin: 12px 0;
   user-select: none;
   --bs-water-bg: #dcebf7;
   --bs-water-dot: #8fb4d6;
@@ -210,11 +205,6 @@
   color: var(--danger);
 }
 
-.bs-hint-text {
-  text-align: center;
-  font-size: 0.85rem;
-}
-
 /* Ship / Water tool toggle. */
 .bs-tools {
   display: flex;
@@ -244,8 +234,4 @@
 
 .bs-tool .cell__water {
   opacity: 1;
-}
-
-.badge--warn {
-  color: var(--danger);
 }

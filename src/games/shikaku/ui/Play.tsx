@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { requestLeave } from '../../../shell/leaveGuard';
 import { useGame } from '../store/gameStore';
 import { computeScore } from '../engine';
 import { Board } from './Board';
@@ -22,7 +21,6 @@ export function Play() {
   const undo = useGame((s) => s.undo);
   const redo = useGame((s) => s.redo);
   const tick = useGame((s) => s.tick);
-  const abandon = useGame((s) => s.abandon);
   const nextFree = useGame((s) => s.nextFree);
   const startDaily = useGame((s) => s.startDaily);
   const navigate = useGame((s) => s.navigate);
@@ -53,42 +51,35 @@ export function Play() {
 
   return (
     <div className="play">
-      <header className="play__bar">
-        <button className="btn btn--ghost" onClick={() => requestLeave(abandon)} aria-label="Back to home">
-          ‹ Home
-        </button>
-        <div className="play__meta">
-          <span className="badge">{mode === 'daily' ? 'Daily' : 'Free'}</span>
-          <span className="badge">{capitalize(puzzle.difficulty)}</span>
-          {review && <span className="badge badge--review">Solution</span>}
-        </div>
-      </header>
+      <div className="play__meta">
+        <span className="badge">{mode === 'daily' ? 'Daily' : 'Free'}</span>
+        <span className="badge">{capitalize(puzzle.difficulty)}</span>
+        {review ? (
+          <span className="badge badge--review">Solution</span>
+        ) : (
+          <>
+            <span className="badge">⏱ {formatDuration(elapsedMs)}</span>
+            <span className="badge badge--warn">✖ {mistakes}</span>
+          </>
+        )}
+      </div>
 
-      {review ? (
+      {review && (
         <p className="play__review-note muted">
           Completed board{dailyKey ? ` for ${dailyKey}` : ''}.
         </p>
-      ) : (
-        <div className="play__stats">
-          <div className="pill">
-            <span className="pill__label">Time</span>
-            <span className="pill__value">{formatDuration(elapsedMs)}</span>
-          </div>
-          <div className="pill">
-            <span className="pill__label">Mistakes</span>
-            <span className="pill__value">{mistakes}</span>
-          </div>
-        </div>
       )}
 
       <div className="play__board-wrap">
-        <Board
-          puzzle={puzzle}
-          boxes={boxes}
-          onAddBox={addBox}
-          onRemoveBox={removeBoxAt}
-          interactive={!solved && !review}
-        />
+        <div className="board-frame">
+          <Board
+            puzzle={puzzle}
+            boxes={boxes}
+            onAddBox={addBox}
+            onRemoveBox={removeBoxAt}
+            interactive={!solved && !review}
+          />
+        </div>
       </div>
 
       {review ? (

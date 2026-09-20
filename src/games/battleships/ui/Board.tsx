@@ -71,7 +71,7 @@ export function Board({ puzzle, marks, hintLocked, review, onCycle }: BoardProps
   } as React.CSSProperties;
 
   return (
-    <div className="bs-board" style={gridStyle}>
+    <div className="bs-board board-frame" style={gridStyle}>
       <div className="bs-corner" />
       {Array.from({ length: size }, (_, c) => {
         const state =
