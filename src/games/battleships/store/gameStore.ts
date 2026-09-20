@@ -4,6 +4,7 @@
 import { create } from 'zustand';
 import {
   dailyFor,
+  GENERATOR_VERSION,
   generate,
   idx,
   isShip,
@@ -119,6 +120,7 @@ export const useBattleships = create<GameState>((set, get) => {
     const saved: SavedGame = {
       id: GAME_ID,
       game: GAME_ID,
+      generatorVersion: GENERATOR_VERSION,
       seed: s.puzzle.seed,
       mode: s.mode,
       difficulty: s.puzzle.difficulty,
@@ -238,7 +240,8 @@ export const useBattleships = create<GameState>((set, get) => {
         ready: true,
       });
 
-      if (saved) {
+      // Ignore a save made by an older generator: its puzzle would now differ.
+      if (saved && (saved.generatorVersion ?? 1) === GENERATOR_VERSION) {
         const puzzle = generate(saved.seed, saved.difficulty);
         const { hintLocked, solutionShip } = prepare(puzzle);
         // Re-lock hint cells; overlay the player's saved marks.

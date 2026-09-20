@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  CLOUD_SAVE_DELAY_MS,
+  flushPendingSaves,
+  localProvider,
+  setActiveProvider,
   clearGameRecords,
   clearSavedGame,
   getGameRecords,
@@ -7,6 +11,7 @@ import {
   putGameRecord,
   putSavedGame,
 } from './db';
+import type { PersistenceProvider, StoredSavedGame } from './persistence/types';
 
 describe('shell db game scoping', () => {
   it('separates records by game', async () => {
@@ -48,5 +53,60 @@ describe('shell db game scoping', () => {
 
     await clearSavedGame('eta', { legacyId: 'current' });
     expect(await getSavedGame('eta', { legacyId: 'current' })).toBeUndefined();
+  });
+});
+
+describe('shell db cloud save batching', () => {
+  const stored: StoredSavedGame[] = [];
+  const cloud = {
+    putSavedGame: vi.fn(async (saved: StoredSavedGame) => {
+      stored.push(saved);
+    }),
+    getSavedGame: vi.fn(async () => undefined),
+    clearSavedGame: vi.fn(async () => {}),
+  } as unknown as PersistenceProvider;
+
+  afterEach(() => {
+    vi.useRealTimers();
+    setActiveProvider(localProvider);
+    stored.length = 0;
+  });
+
+  it('coalesces a burst of cloud saves into one write, readable meanwhile', async () => {
+    vi.useFakeTimers();
+    setActiveProvider(cloud);
+    for (let n = 1; n <= 5; n++) await putSavedGame({ id: 'omega', game: 'omega', n });
+    expect(cloud.putSavedGame).not.toHaveBeenCalled();
+    expect(await getSavedGame('omega')).toMatchObject({ n: 5 });
+
+    await vi.advanceTimersByTimeAsync(CLOUD_SAVE_DELAY_MS);
+    expect(stored).toEqual([{ id: 'omega', game: 'omega', n: 5 }]);
+  });
+
+  it('flushes on demand and when the account changes', async () => {
+    vi.useFakeTimers();
+    setActiveProvider(cloud);
+    await putSavedGame({ id: 'psi', game: 'psi', n: 1 });
+    await flushPendingSaves();
+    expect(stored.map((s) => s.id)).toEqual(['psi']);
+
+    await putSavedGame({ id: 'chi', game: 'chi', n: 1 });
+    setActiveProvider(localProvider); // sign-out: the queued save must not be lost
+    await vi.advanceTimersByTimeAsync(0);
+    expect(stored.map((s) => s.id)).toEqual(['psi', 'chi']);
+  });
+
+  it('does not write a save that was cleared before it fired', async () => {
+    vi.useFakeTimers();
+    setActiveProvider(cloud);
+    await putSavedGame({ id: 'phi', game: 'phi', n: 1 });
+    await clearSavedGame('phi');
+    await vi.advanceTimersByTimeAsync(CLOUD_SAVE_DELAY_MS * 2);
+    expect(stored).toHaveLength(0);
+  });
+
+  it('writes guest saves straight away', async () => {
+    await putSavedGame({ id: 'rho', game: 'rho', n: 1 });
+    expect((await localProvider.getSavedGame('rho'))?.id).toBe('rho');
   });
 });

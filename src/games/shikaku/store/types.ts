@@ -22,6 +22,7 @@ export interface GameRecord {
 export interface SavedGame {
   id: string; // per-game key (the owning game id)
   game: string; // owning game id (e.g. 'shikaku')
+  generatorVersion?: number; // engine version the puzzle was generated with
   puzzleSeed: number;
   mode: Mode;
   difficulty: Difficulty;

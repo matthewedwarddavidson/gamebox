@@ -4,9 +4,9 @@
 
 import { create } from 'zustand';
 import {
-  SIZE_FOR,
   computeRuns,
   dailyFor,
+  GENERATOR_VERSION,
   generate,
   type Difficulty,
   type Mode,
@@ -116,6 +116,7 @@ export const useKakuro = create<GameState>((set, get) => {
     const saved: SavedGame = {
       id: GAME_ID,
       game: GAME_ID,
+      generatorVersion: GENERATOR_VERSION,
       seed: s.puzzle.seed,
       mode: s.mode,
       difficulty: s.puzzle.difficulty,
@@ -299,8 +300,8 @@ export const useKakuro = create<GameState>((set, get) => {
         ready: true,
       });
 
-      // Ignore saves from before the grid sizes changed: they no longer fit.
-      if (saved && saved.digits?.length === SIZE_FOR[saved.difficulty] ** 2) {
+      // Saves from an older generator (unstamped ones are version 1) no longer fit.
+      if (saved && (saved.generatorVersion ?? 1) === GENERATOR_VERSION) {
         const puzzle = generate(saved.seed, saved.difficulty);
         const digits = emptyDigits(puzzle);
         const notes = emptyNotes(puzzle);

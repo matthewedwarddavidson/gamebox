@@ -288,3 +288,11 @@ function makePuzzle(
     createdAt: Date.now(),
   };
 }
+
+/**
+ * Bump whenever generation changes what a (seed, difficulty) produces. In-progress
+ * saves record the version they were made with, so a save from an older
+ * generator is dropped on resume instead of being replayed against a different
+ * puzzle.
+ */
+export const GENERATOR_VERSION = 1;

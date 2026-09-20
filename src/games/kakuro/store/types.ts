@@ -21,6 +21,7 @@ export interface GameRecord extends StoredGameRecord {
 export interface SavedGame extends StoredSavedGame {
   id: string; // the game id key
   game: string; // 'kakuro'
+  generatorVersion?: number; // engine version the puzzle was generated with
   seed: number;
   mode: Mode;
   difficulty: Difficulty;

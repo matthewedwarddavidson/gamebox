@@ -5,6 +5,7 @@ import { create } from 'zustand';
 import {
   computeScore,
   dailyFor,
+  GENERATOR_VERSION,
   generate,
   isSolved,
   rectsOverlap,
@@ -104,6 +105,7 @@ export const useGame = create<GameState>((set, get) => {
     const saved: SavedGame = {
       id: GAME_ID,
       game: GAME_ID,
+      generatorVersion: GENERATOR_VERSION,
       puzzleSeed: s.puzzle.seed,
       mode: s.mode,
       difficulty: s.puzzle.difficulty,
@@ -218,7 +220,8 @@ export const useGame = create<GameState>((set, get) => {
       });
 
       // Resume an in-progress game if present.
-      if (saved) {
+      // Ignore a save made by an older generator: its puzzle would now differ.
+      if (saved && (saved.generatorVersion ?? 1) === GENERATOR_VERSION) {
         const puzzle = generate(saved.puzzleSeed, saved.difficulty);
         set({
           puzzle,

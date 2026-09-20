@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { generate } from './generator';
+import { hashString } from '../../../shared/rng';
+import { GENERATOR_VERSION, generate } from './generator';
 import { solve } from './solver';
 import { DIFFICULTIES, SIZE_FOR, computeRuns, idx, type Puzzle } from './types';
 
@@ -87,5 +88,23 @@ describe('kakuro generator', () => {
     const a = generate(1, 'easy');
     const b = generate(2, 'easy');
     expect(b.solution).not.toEqual(a.solution);
+  });
+
+  // Pins the exact puzzles, so a change to generation cannot slip through
+  // unnoticed: if this fails on purpose, bump GENERATOR_VERSION and update it.
+  it('keeps producing the same puzzles for the current generator version', () => {
+    expect(GENERATOR_VERSION).toBe(2);
+    const fingerprint = (seed: number, difficulty: 'easy' | 'medium' | 'hard') => {
+      const p = generate(seed, difficulty);
+      return hashString(JSON.stringify([p.cells, p.solution]));
+    };
+    expect([
+      fingerprint(1, 'easy'),
+      fingerprint(42, 'easy'),
+      fingerprint(1, 'medium'),
+      fingerprint(42, 'medium'),
+      fingerprint(1, 'hard'),
+      fingerprint(42, 'hard'),
+    ]).toEqual([606400428, 2072541176, 3584893273, 331543357, 3139821450, 4030923536]);
   });
 });

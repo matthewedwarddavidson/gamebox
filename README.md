@@ -70,11 +70,16 @@ This keeps things simple and serverless:
 - `src/shell/` — the multi-game shell: game registry, hub screen, optional
   accounts, and cross-game state. Persistence is pluggable via a
   `PersistenceProvider` (see `src/shell/persistence/`): a local IndexedDB store
-  for guests and a Firestore store for signed-in users.
+  for guests and a Firestore store for signed-in users. In-progress saves for
+  signed-in users are batched (one write a few seconds after the last move) to
+  keep Firestore writes down.
 - `src/shared/` — utilities shared by every game (e.g. the seeded RNG).
 - `src/games/<game>/` — one folder per game, each self-contained with:
   - `engine/` — pure, DOM-free game logic: puzzle generation, solver
-    (uniqueness verification), rules/validation, and the daily puzzle.
+    (uniqueness verification), rules/validation, and the daily puzzle. Each
+    generator exports a `GENERATOR_VERSION`: bump it whenever a change alters the
+    puzzle a seed produces, so older in-progress saves are discarded rather than
+    replayed against a different puzzle.
   - `store/` — Zustand game state plus persistence and stats.
   - `ui/` — React UI: home, board, and stats screens.
 

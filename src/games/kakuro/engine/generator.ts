@@ -177,6 +177,23 @@ function randomFill(rng: Rng, fill: boolean[], size: number): number[] | null {
 }
 
 /**
+ * e^-x for x >= 0, from plain arithmetic. Unlike `Math.exp`, whose last digits
+ * may differ between JavaScript engines, IEEE-754 arithmetic is exact and
+ * identical everywhere, so every browser makes the same annealing choices and
+ * generates the same puzzle from a seed.
+ */
+function expNegative(x: number): number {
+  if (x > 30) return 0;
+  let term = 1;
+  let sum = 1;
+  for (let k = 1; k <= 120; k++) {
+    term = (term * x) / k;
+    sum += term;
+  }
+  return 1 / sum;
+}
+
+/**
  * How ambiguous a set of clues is to basic logic: the number of candidate
  * digits left over (beyond one per cell) once each run's sum has been used to
  * rule out impossible digits. Zero means the clues pin down every cell without
@@ -277,7 +294,7 @@ function anneal(rng: Rng, fill: boolean[], digits: number[], size: number): numb
     }
 
     const next = energy(sol);
-    if (next <= current || rng.next() < Math.exp((current - next) / temperature)) {
+    if (next <= current || rng.next() < expNegative((next - current) / temperature)) {
       current = next;
     } else {
       sol[i] = old;
@@ -388,3 +405,11 @@ export function generate(seed: number, difficulty: Difficulty): Puzzle {
 }
 
 export { DIFFICULTIES };
+
+/**
+ * Bump whenever generation changes what a (seed, difficulty) produces. In-progress
+ * saves record the version they were made with, so a save from an older
+ * generator is dropped on resume instead of being replayed against a different
+ * puzzle.
+ */
+export const GENERATOR_VERSION = 2;
