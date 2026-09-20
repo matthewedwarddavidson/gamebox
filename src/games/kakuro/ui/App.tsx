@@ -46,7 +46,7 @@ export function KakuroApp() {
   }
 
   return (
-    <div className="app">
+    <div className="app kk-app">
       {screen === 'home' && <Home />}
       {screen === 'play' && <Play />}
       {screen === 'stats' && <StatsView />}

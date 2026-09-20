@@ -2,6 +2,18 @@
    .chip, .badge, .win, .stat, .play, etc.) and the CSS theme variables are
    provided globally by the app's base stylesheet. */
 
+.app.kk-app {
+  /* The shell's breadcrumb already sits above the game, so a full-height page
+     would always scroll by the breadcrumb's height. */
+  min-height: 0;
+}
+
+.kk-play {
+  /* Board and number pad share one width: as wide as the screen allows, but
+     no taller than leaves room for the rest of the screen in the viewport. */
+  --kk-size: clamp(280px, calc(100dvh - 352px), min(92vw, 460px));
+}
+
 .kk-board-wrap {
   position: relative;
 }
@@ -13,8 +25,8 @@
   padding: 2px;
   border-radius: 10px;
   border: 2px solid var(--kk-grid-line, var(--border));
-  margin: 12px auto;
-  width: min(92vw, 460px);
+  margin: 8px auto;
+  width: var(--kk-size, min(92vw, 460px));
   aspect-ratio: 1;
   user-select: none;
   --kk-clue-bg: #33405a;
@@ -98,12 +110,12 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
-  margin: 12px auto;
-  width: min(92vw, 460px);
+  margin: 8px auto 12px;
+  width: var(--kk-size, min(92vw, 460px));
 }
 
 .kk-pad__key {
-  aspect-ratio: 1;
+  height: clamp(40px, 7dvh, 60px);
   display: grid;
   place-items: center;
   font-size: 1.3rem;
@@ -203,7 +215,7 @@
 }
 
 .kk-hint-text {
-  margin-top: 12px;
-  font-size: 0.9rem;
+  margin-top: 8px;
+  font-size: 0.8rem;
   line-height: 1.4;
 }

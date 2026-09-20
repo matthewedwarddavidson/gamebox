@@ -77,7 +77,7 @@ export function Play() {
   }
 
   return (
-    <div className="play">
+    <div className="play kk-play">
       <div className="play__meta">
         <span className="badge">{mode === 'daily' ? 'Daily' : 'Free'}</span>
         <span className="badge">{capitalize(puzzle.difficulty)}</span>
@@ -147,11 +147,8 @@ export function Play() {
       )}
 
       <p className="muted kk-hint-text">
-        Tap a white cell, then pick a digit (or use your keyboard: 1–9, arrow keys
-        to move, Backspace to erase, N to toggle pencil notes). Each across and down run must use the digits
-        1–9 without repeats and add up to the clue shown in the black cell at its
-        start — the across sum sits in the top-right, the down sum in the
-        bottom-left.
+        Tap a white cell, then pick a digit. Each run uses 1–9 without repeats and adds up to
+        its clue. Keys: 1–9, arrows, Backspace, N for notes.
       </p>
     </div>
   );
