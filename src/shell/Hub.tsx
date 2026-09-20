@@ -1,19 +1,28 @@
 import type { GameDefinition } from './types';
 import { useShell } from './shellStore';
 import { AccountMenu } from './AccountMenu';
+import { useAuth } from './authStore';
 
 /** The game picker: a landing screen listing every registered game. */
 export function Hub({ games }: { games: GameDefinition[] }) {
   const openGame = useShell((s) => s.openGame);
+  const openStats = useShell((s) => s.openStats);
+  const signedIn = useAuth((s) => s.available && s.status === 'signed-in');
 
   return (
     <div className="app hub">
       <header className="home__header">
         <h1 className="home__title">Gamebox</h1>
-        <p className="home__subtitle">Pick something to play.</p>
       </header>
 
       <AccountMenu />
+
+      {/* Signed-in players reach stats from the account box; everyone else here. */}
+      {!signedIn && (
+        <button className="btn btn--subtle hub__stats-link" onClick={openStats}>
+          Your stats
+        </button>
+      )}
 
       <div className="hub__grid">
         {games.map((g) => (

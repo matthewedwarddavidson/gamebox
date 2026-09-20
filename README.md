@@ -21,6 +21,10 @@ Pick a game from the hub:
   crossword: fill each run of white cells with the digits 1–9, no repeats, so
   that it adds up to the clue in the black cell at its start.
 
+Each game has its own stats screen, and the hub's **Your stats** page combines
+them: totals, a daily streak across all games, time spent solving, a per-game
+breakdown and recent wins.
+
 <!-- markdownlint-disable MD033 -->
 <p><em>Shikaku</em><br />
 <img src="docs/example-shikaku-game.png" alt="A completed Shikaku board partitioned into coloured rectangles, each labelled with its area" width="200" /></p>

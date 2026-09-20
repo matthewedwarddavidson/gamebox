@@ -4,6 +4,8 @@ import { getGame, GAMES } from './registry';
 import { onProviderChange } from './db';
 import { useBreadcrumb } from './breadcrumbStore';
 import { Hub } from './Hub';
+import { Breadcrumb } from './Breadcrumb';
+import { OverallStatsView } from './OverallStatsView';
 
 /**
  * Top-level router. With no active game it shows the hub; otherwise it renders
@@ -12,6 +14,7 @@ import { Hub } from './Hub';
  */
 export function AppShell() {
   const activeGameId = useShell((s) => s.activeGameId);
+  const view = useShell((s) => s.view);
   const goHome = useShell((s) => s.goHome);
   const trail = useBreadcrumb((s) => s.trail);
   const game = activeGameId ? getGame(activeGameId) : undefined;
@@ -22,35 +25,22 @@ export function AppShell() {
   useEffect(() => onProviderChange(() => setDataVersion((v) => v + 1)), []);
 
   if (!game) {
+    if (view === 'stats') {
+      return (
+        <>
+          <Breadcrumb trail={[{ label: 'Your stats' }]} onHome={goHome} />
+          <OverallStatsView games={GAMES} />
+        </>
+      );
+    }
     return <Hub games={GAMES} />;
   }
 
   const Root = game.Root;
   return (
     <>
-      <nav className="breadcrumb" aria-label="Breadcrumb">
-        <button className="breadcrumb__crumb" onClick={goHome}>
-          Gamebox
-        </button>
-        {trail.map((crumb, i) => (
-          <span className="breadcrumb__group" key={i}>
-            <span className="breadcrumb__sep" aria-hidden="true">
-              ›
-            </span>
-            {crumb.onClick ? (
-              <button className="breadcrumb__crumb" onClick={crumb.onClick}>
-                {crumb.label}
-              </button>
-            ) : (
-              <span className="breadcrumb__crumb breadcrumb__crumb--current" aria-current="page">
-                {crumb.label}
-              </span>
-            )}
-          </span>
-        ))}
-      </nav>
+      <Breadcrumb trail={trail} onHome={goHome} />
       <Root key={dataVersion} />
     </>
   );
 }
-

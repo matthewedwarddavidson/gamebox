@@ -1,5 +1,6 @@
 import { useAuth } from './authStore';
 import { GitHubIcon, GoogleIcon } from './ProviderIcons';
+import { useShell } from './shellStore';
 
 /**
  * Account controls shown on the hub. When signed out it offers Google / GitHub
@@ -15,6 +16,7 @@ export function AccountMenu() {
   const signInWithGoogle = useAuth((s) => s.signInWithGoogle);
   const signInWithGitHub = useAuth((s) => s.signInWithGitHub);
   const signOut = useAuth((s) => s.signOut);
+  const openStats = useShell((s) => s.openStats);
 
   if (!available) return null;
 
@@ -39,9 +41,14 @@ export function AccountMenu() {
           </span>
         </div>
         {syncing ? <span className="muted account__status">Syncing…</span> : null}
-        <button className="btn btn--subtle account__btn" onClick={() => void signOut()}>
-          Sign out
-        </button>
+        <div className="account__actions">
+          <button className="btn btn--subtle account__btn" onClick={openStats}>
+            Your stats
+          </button>
+          <button className="btn btn--subtle account__btn" onClick={() => void signOut()}>
+            Sign out
+          </button>
+        </div>
       </div>
     );
   }

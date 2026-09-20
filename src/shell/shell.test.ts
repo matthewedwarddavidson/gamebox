@@ -37,4 +37,14 @@ describe('shell store', () => {
     useShell.getState().goHome();
     expect(useShell.getState().activeGameId).toBeNull();
   });
+
+  it('opens the stats view and leaves it via home or a game', () => {
+    useShell.getState().openStats();
+    expect(useShell.getState()).toMatchObject({ activeGameId: null, view: 'stats' });
+    useShell.getState().openGame('shikaku');
+    expect(useShell.getState()).toMatchObject({ activeGameId: 'shikaku', view: 'hub' });
+    useShell.getState().openStats();
+    useShell.getState().goHome();
+    expect(useShell.getState()).toMatchObject({ activeGameId: null, view: 'hub' });
+  });
 });

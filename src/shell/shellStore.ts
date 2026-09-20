@@ -22,20 +22,30 @@ function saveActiveGame(id: string | null): void {
   }
 }
 
+/** What the shell shows when no game is open. */
+export type ShellView = 'hub' | 'stats';
+
 interface ShellState {
   activeGameId: string | null;
+  view: ShellView;
   openGame: (id: string) => void;
+  openStats: () => void;
   goHome: () => void;
 }
 
 export const useShell = create<ShellState>((set) => ({
   activeGameId: loadActiveGame(),
+  view: 'hub',
   openGame: (id) => {
     saveActiveGame(id);
-    set({ activeGameId: id });
+    set({ activeGameId: id, view: 'hub' });
+  },
+  openStats: () => {
+    saveActiveGame(null);
+    set({ activeGameId: null, view: 'stats' });
   },
   goHome: () => {
     saveActiveGame(null);
-    set({ activeGameId: null });
+    set({ activeGameId: null, view: 'hub' });
   },
 }));

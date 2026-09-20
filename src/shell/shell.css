@@ -177,6 +177,17 @@ button.breadcrumb__crumb:hover {
   font-size: 0.85rem;
 }
 
+.overall-stats .summary-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.hub__stats-link {
+  display: block;
+  width: auto;
+  margin: 12px auto 0;
+  padding: 6px 14px;
+}
+
 /* Privacy notice in the hub footer. */
 .hub__footer {
   margin-top: 24px;
