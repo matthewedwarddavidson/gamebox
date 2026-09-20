@@ -1,6 +1,7 @@
 // A simplified thumbnail of a Kakuro board for the hub tile: a small grid with
-// pastel clue cells (diagonal split carrying sums) and white cells holding a few
-// sample digits.
+// pastel clue cells (diagonal split carrying sums) and white cells holding
+// sample digits. The sums add up: every run's digits are distinct and total its clue.
+
 // Pastel periwinkle clue cells, matching the board.
 const CLUE_BG = '#ccd3f1';
 const CLUE_INK = '#3e4779';
@@ -8,15 +9,16 @@ const CLUE_LINE = '#8b96d2';
 const CELL = 12;
 const SIZE = 4;
 
-// Black clue cells carry an across sum (top-right) and/or a down sum
-// (bottom-left). Keyed by row-major index.
+// Clue cells carry an across sum (top-right) and/or a down sum (bottom-left).
+// Keyed by row-major index. The header row and column are always clue cells;
+// index 7 is a clue cell inside the grid, heading the column of 9 and 4.
 const CLUES: Record<number, { right?: number; down?: number }> = {
-  1: { down: 16 }, // header for column 1
-  2: { down: 17 }, // header for column 2
-  3: { down: 13 }, // header for column 3
-  4: { right: 6 }, // header for row 1
-  8: { right: 24 }, // header for row 2
-  12: { right: 16 }, // header for row 3
+  1: { down: 15 }, // 2 + 7 + 6
+  2: { down: 17 }, // 4 + 8 + 5
+  4: { right: 6 }, // 2 + 4
+  7: { down: 13 }, // 9 + 4
+  8: { right: 24 }, // 7 + 8 + 9
+  12: { right: 15 }, // 6 + 5 + 4
 };
 
 // Sample digits shown in the white cells (row-major index → digit).
@@ -47,7 +49,7 @@ export function KakuroPreview() {
         const c = i % SIZE;
         const x = c * CELL;
         const y = r * CELL;
-        const isWhite = r > 0 && c > 0;
+        const isWhite = r > 0 && c > 0 && CLUES[i] === undefined;
         if (isWhite) {
           const d = DIGITS[i];
           return (
