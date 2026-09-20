@@ -15,6 +15,17 @@ export function Home() {
   const [showCalendar, setShowCalendar] = useState(false);
 
   const daily = dailyFor();
+  // A daily paused on an earlier day, which can be picked up again from here.
+  const pausedOtherDay = useTrainTracks((s) =>
+    s.puzzle !== null &&
+    s.mode === 'daily' &&
+    s.dailyKey !== undefined &&
+    s.dailyKey !== dailyFor().dateKey &&
+    !s.solved &&
+    !s.review
+      ? s.dailyKey
+      : null,
+  );
   const dailyPaused = useTrainTracks(
     (s) =>
       s.puzzle !== null &&
@@ -61,6 +72,14 @@ export function Home() {
         ) : (
           <button className="btn btn--primary" onClick={() => startDaily()}>
             {dailyPaused ? 'Resume' : 'Play'} today’s puzzle
+          </button>
+        )}
+        {pausedOtherDay && (
+          <button
+            className="btn btn--subtle"
+            onClick={() => startDaily(new Date(`${pausedOtherDay}T12:00:00Z`))}
+          >
+            Resume the {pausedOtherDay} puzzle
           </button>
         )}
         <button

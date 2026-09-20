@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { modeLabel } from '../../../shell/modeLabel';
 import { useKakuro } from '../store/gameStore';
 import { Board } from './Board';
 import { NumberPad } from './NumberPad';
@@ -10,6 +11,7 @@ export function Play() {
   const selected = useKakuro((s) => s.selected);
   const review = useKakuro((s) => s.review);
   const mode = useKakuro((s) => s.mode);
+  const dailyKey = useKakuro((s) => s.dailyKey);
   const mistakes = useKakuro((s) => s.mistakes);
   const elapsedMs = useKakuro((s) => s.elapsedMs);
   const solved = useKakuro((s) => s.solved);
@@ -79,7 +81,7 @@ export function Play() {
   return (
     <div className="play kk-play">
       <div className="play__meta">
-        <span className="badge">{mode === 'daily' ? 'Daily' : 'Free'}</span>
+        <span className="badge">{modeLabel(mode, dailyKey)}</span>
         <span className="badge">{capitalize(puzzle.difficulty)}</span>
         {!review && <span className="badge">⏱ {formatDuration(elapsedMs)}</span>}
         {!review && <span className="badge badge--warn">✖ {mistakes}</span>}

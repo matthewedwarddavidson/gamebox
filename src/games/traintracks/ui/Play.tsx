@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { modeLabel } from '../../../shell/modeLabel';
 import { useTrainTracks } from '../store/gameStore';
 import { Board } from './Board';
 import { Palette } from './Palette';
@@ -11,6 +12,7 @@ export function Play() {
   const locked = useTrainTracks((s) => s.locked);
   const review = useTrainTracks((s) => s.review);
   const mode = useTrainTracks((s) => s.mode);
+  const dailyKey = useTrainTracks((s) => s.dailyKey);
   const mistakes = useTrainTracks((s) => s.mistakes);
   const elapsedMs = useTrainTracks((s) => s.elapsedMs);
   const solved = useTrainTracks((s) => s.solved);
@@ -51,7 +53,7 @@ export function Play() {
   return (
     <div className="play">
       <div className="play__meta">
-        <span className="badge">{mode === 'daily' ? 'Daily' : 'Free'}</span>
+        <span className="badge">{modeLabel(mode, dailyKey)}</span>
         <span className="badge">{capitalize(puzzle.difficulty)}</span>
         {!review && <span className="badge">⏱ {formatDuration(elapsedMs)}</span>}
         {!review && <span className="badge badge--warn">✖ {mistakes}</span>}

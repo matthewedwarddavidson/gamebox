@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { modeLabel } from '../../../shell/modeLabel';
 import { useGame } from '../store/gameStore';
 import { computeScore } from '../engine';
 import { Board } from './Board';
@@ -52,7 +53,7 @@ export function Play() {
   return (
     <div className="play">
       <div className="play__meta">
-        <span className="badge">{mode === 'daily' ? 'Daily' : 'Free'}</span>
+        <span className="badge">{modeLabel(mode, dailyKey)}</span>
         <span className="badge">{capitalize(puzzle.difficulty)}</span>
         {review ? (
           <span className="badge badge--review">Solution</span>

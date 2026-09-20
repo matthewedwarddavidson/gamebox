@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { modeLabel } from '../../../shell/modeLabel';
 import { useBattleships } from '../store/gameStore';
 import { Board } from './Board';
 import { capitalize, formatDuration } from './format';
@@ -19,6 +20,7 @@ export function Play() {
   const hintLocked = useBattleships((s) => s.hintLocked);
   const review = useBattleships((s) => s.review);
   const mode = useBattleships((s) => s.mode);
+  const dailyKey = useBattleships((s) => s.dailyKey);
   const mistakes = useBattleships((s) => s.mistakes);
   const elapsedMs = useBattleships((s) => s.elapsedMs);
   const solved = useBattleships((s) => s.solved);
@@ -65,7 +67,7 @@ export function Play() {
   return (
     <div className="play">
       <div className="play__meta">
-        <span className="badge">{mode === 'daily' ? 'Daily' : 'Free'}</span>
+        <span className="badge">{modeLabel(mode, dailyKey)}</span>
         <span className="badge">{capitalize(puzzle.difficulty)}</span>
         <span className="badge">⏱ {formatDuration(elapsedMs)}</span>
         <span className="badge badge--warn">✖ {mistakes}</span>

@@ -130,11 +130,6 @@ export const useKakuro = create<GameState>((set, get) => {
     await putSavedGame(saved);
   }
 
-  async function refreshStats(): Promise<void> {
-    const games = await getGameRecords<GameRecord>(GAME_ID);
-    set({ games, stats: computeStats(games) });
-  }
-
   function beginGame(puzzle: Puzzle, mode: Mode, dailyKey?: string): void {
     set({
       puzzle,
@@ -175,9 +170,11 @@ export const useKakuro = create<GameState>((set, get) => {
       mistakes: s.mistakes,
       dailyKey: s.dailyKey,
     };
+    // Count the loss straight away, then save it.
+    const games = [...get().games, record];
+    set({ games, stats: computeStats(games) });
     await putGameRecord(record);
     await clearSavedGame(GAME_ID);
-    await refreshStats();
   }
 
   async function finishGame(): Promise<void> {
@@ -199,10 +196,9 @@ export const useKakuro = create<GameState>((set, get) => {
         (g) => g.mode === 'daily' && g.status === 'won' && g.dailyKey === s.dailyKey,
       );
 
-    set({ running: false, solved: true });
-
+    let record: GameRecord | null = null;
     if (!alreadyWonDaily) {
-      const record: GameRecord = {
+      record = {
         id: s.recordId ?? newRecordId(),
         game: GAME_ID,
         seed: s.puzzle.seed,
@@ -215,10 +211,15 @@ export const useKakuro = create<GameState>((set, get) => {
         mistakes: s.mistakes,
         dailyKey: s.dailyKey,
       };
-      await putGameRecord(record);
     }
+
+    // Show the win straight away; saving it (to the cloud, for signed-in players)
+    // can take a moment.
+    const games = record ? [...s.games, record] : s.games;
+    set({ running: false, solved: true, games, stats: computeStats(games) });
+
+    if (record) await putGameRecord(record);
     await clearSavedGame(GAME_ID);
-    await refreshStats();
   }
 
   /**
@@ -323,6 +324,12 @@ export const useKakuro = create<GameState>((set, get) => {
 
       // Saves from an older generator (unstamped ones are version 1) no longer fit.
       if (saved && (saved.generatorVersion ?? 1) === GENERATOR_VERSION) {
+        // A daily left paused on an earlier day stays paused: don't drop the player
+        // back into yesterday's puzzle as if it were today's.
+        const stale =
+          saved.mode === 'daily' &&
+          saved.dailyKey !== undefined &&
+          saved.dailyKey !== dailyFor().dateKey;
         const puzzle = generate(saved.seed, saved.difficulty);
         const digits = emptyDigits(puzzle);
         const notes = emptyNotes(puzzle);
@@ -344,11 +351,11 @@ export const useKakuro = create<GameState>((set, get) => {
           mistakes: saved.mistakes,
           startedAt: Date.now() - saved.elapsedMs,
           elapsedMs: saved.elapsedMs,
-          running: true,
+          running: !stale,
           solved: false,
           review: false,
           recordId: newRecordId(),
-          screen: 'play',
+          screen: stale ? 'home' : 'play',
         });
 
         // A saved board can already be complete (e.g. finished via undo before

@@ -133,11 +133,6 @@ export const useBattleships = create<GameState>((set, get) => {
     await putSavedGame(saved);
   }
 
-  async function refreshStats(): Promise<void> {
-    const games = await getGameRecords<GameRecord>(GAME_ID);
-    set({ games, stats: computeStats(games) });
-  }
-
   function beginGame(puzzle: Puzzle, mode: Mode, dailyKey?: string): void {
     const { hintLocked, solutionShip } = prepare(puzzle);
     const marks = initialMarks(puzzle, hintLocked);
@@ -179,9 +174,11 @@ export const useBattleships = create<GameState>((set, get) => {
       mistakes: s.mistakes,
       dailyKey: s.dailyKey,
     };
+    // Count the loss straight away, then save it.
+    const games = [...get().games, record];
+    set({ games, stats: computeStats(games) });
     await putGameRecord(record);
     await clearSavedGame(GAME_ID);
-    await refreshStats();
   }
 
   async function finishGame(): Promise<void> {
@@ -203,10 +200,9 @@ export const useBattleships = create<GameState>((set, get) => {
         (g) => g.mode === 'daily' && g.status === 'won' && g.dailyKey === s.dailyKey,
       );
 
-    set({ running: false, solved: true });
-
+    let record: GameRecord | null = null;
     if (!alreadyWonDaily) {
-      const record: GameRecord = {
+      record = {
         id: s.recordId ?? newRecordId(),
         game: GAME_ID,
         seed: s.puzzle.seed,
@@ -219,10 +215,15 @@ export const useBattleships = create<GameState>((set, get) => {
         mistakes: s.mistakes,
         dailyKey: s.dailyKey,
       };
-      await putGameRecord(record);
     }
+
+    // Show the win straight away; saving it (to the cloud, for signed-in players)
+    // can take a moment.
+    const games = record ? [...s.games, record] : s.games;
+    set({ running: false, solved: true, games, stats: computeStats(games) });
+
+    if (record) await putGameRecord(record);
     await clearSavedGame(GAME_ID);
-    await refreshStats();
   }
 
   return {
@@ -263,6 +264,12 @@ export const useBattleships = create<GameState>((set, get) => {
 
       // Ignore a save made by an older generator: its puzzle would now differ.
       if (saved && (saved.generatorVersion ?? 1) === GENERATOR_VERSION) {
+        // A daily left paused on an earlier day stays paused: don't drop the player
+        // back into yesterday's puzzle as if it were today's.
+        const stale =
+          saved.mode === 'daily' &&
+          saved.dailyKey !== undefined &&
+          saved.dailyKey !== dailyFor().dateKey;
         const puzzle = generate(saved.seed, saved.difficulty);
         const { hintLocked, solutionShip } = prepare(puzzle);
         // Re-lock hint cells; overlay the player's saved marks.
@@ -280,8 +287,8 @@ export const useBattleships = create<GameState>((set, get) => {
           mistakes: saved.mistakes,
           startedAt: Date.now() - saved.elapsedMs,
           elapsedMs: saved.elapsedMs,
-          running: true,
-          screen: 'play',
+          running: !stale,
+          screen: stale ? 'home' : 'play',
           solved: false,
           review: false,
           recordId: newRecordId(),

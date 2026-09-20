@@ -81,4 +81,61 @@ describe('kakuro forfeit', () => {
     expect(useKakuro.getState().dailyKey).toBe('2026-03-03');
     expect(useKakuro.getState().digits.every((d) => d === 0)).toBe(true);
   });
+
+  it("does not reopen an earlier day's paused daily after a refresh", async () => {
+    const yesterday = new Date(Date.now() - 86_400_000);
+    useKakuro.getState().startDaily(yesterday);
+    useKakuro.getState().enterDigit(1);
+    useKakuro.getState().abandon();
+    await settle();
+
+    // A fresh page load: the store starts empty, then restores from storage.
+    useKakuro.setState({ puzzle: null, screen: 'play', running: true });
+    await useKakuro.getState().init();
+
+    const s = useKakuro.getState();
+    expect(s.screen).toBe('home');
+    expect(s.running).toBe(false);
+    expect(s.dailyKey).toBe(yesterday.toISOString().slice(0, 10));
+    expect(s.puzzle).not.toBeNull(); // still there to resume from Home
+  });
+
+  it("reopens today's paused daily after a refresh", async () => {
+    useKakuro.getState().startDaily();
+    useKakuro.getState().enterDigit(1);
+    useKakuro.getState().abandon();
+    await settle();
+
+    useKakuro.setState({ puzzle: null, screen: 'home', running: false });
+    await useKakuro.getState().init();
+
+    expect(useKakuro.getState()).toMatchObject({ screen: 'play', running: true });
+  });
+
+  it('counts a forfeit in the stats immediately, before it has been saved', () => {
+    useKakuro.getState().startFree('easy');
+    useKakuro.getState().abandon();
+    // No awaiting: storage (the cloud, for signed-in players) may still be busy.
+    expect(useKakuro.getState().stats).toMatchObject({ played: 1, won: 0 });
+  });
+
+  it('counts a win in the stats and calendar immediately, before it has been saved', () => {
+    const day = new Date('2026-03-02T09:00:00Z');
+    useKakuro.getState().startDaily(day);
+    const { puzzle } = useKakuro.getState();
+    if (!puzzle) throw new Error('no puzzle');
+    const cells = puzzle.cells.flatMap((c, i) => (c.fill ? [i] : []));
+    const last = cells[cells.length - 1];
+    useKakuro.setState({
+      digits: puzzle.solution.map((d, i) => (i === last ? 0 : d)),
+      selected: last,
+    });
+
+    useKakuro.getState().enterDigit(puzzle.solution[last]);
+
+    const s = useKakuro.getState();
+    expect(s.solved).toBe(true);
+    expect(s.stats).toMatchObject({ played: 1, won: 1 });
+    expect(s.games.some((g) => g.status === 'won' && g.dailyKey === '2026-03-02')).toBe(true);
+  });
 });
