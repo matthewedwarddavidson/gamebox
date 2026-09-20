@@ -1,21 +1,22 @@
 interface NumberPadProps {
   onDigit: (digit: number) => void;
   onErase: () => void;
+  pencil: boolean;
   disabled: boolean;
 }
 
 const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-export function NumberPad({ onDigit, onErase, disabled }: NumberPadProps) {
+export function NumberPad({ onDigit, onErase, pencil, disabled }: NumberPadProps) {
   return (
-    <div className="kk-pad">
+    <div className={`kk-pad${pencil ? ' kk-pad--pencil' : ''}`}>
       {DIGITS.map((d) => (
         <button
           key={d}
           className="kk-pad__key"
           onClick={() => onDigit(d)}
           disabled={disabled}
-          aria-label={`Enter ${d}`}
+          aria-label={`${pencil ? 'Pencil in' : 'Enter'} ${d}`}
         >
           {d}
         </button>

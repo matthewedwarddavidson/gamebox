@@ -137,6 +137,37 @@
   font-size: 1.1rem;
 }
 
+/* Pencil marks: a 3×3 grid of candidate digits inside an empty cell. */
+.kk-notes {
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+  font-size: clamp(0.6rem, 3vw, 0.95rem);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--muted, var(--text));
+}
+
+.kk-notes > span {
+  display: grid;
+  place-items: center;
+}
+
+/* Number pad while entering pencil marks. */
+.kk-pad--pencil .kk-pad__key:not(.kk-pad__key--erase) {
+  font-size: 1rem;
+  color: var(--primary);
+  border-style: dashed;
+}
+
+.btn.kk-notes-toggle--on {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
 /* Solved banner overlaid on the board so it's visible without scrolling. */
 .kk-solved-overlay {
   position: absolute;

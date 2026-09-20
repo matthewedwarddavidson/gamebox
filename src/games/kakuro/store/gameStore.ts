@@ -20,6 +20,7 @@ import {
   putSavedGame,
 } from '../../../shell/db';
 import { computeStats, emptyStats } from './stats';
+import { toggleNote } from './notes';
 import type { GameRecord, SavedGame, Stats } from './types';
 import { trackGameCompleted, trackGameStarted } from '../../../shell/analytics';
 
@@ -32,6 +33,7 @@ export type Theme = 'light' | 'dark';
 /** An undo/redo snapshot of the mutable board state. */
 interface Snapshot {
   digits: number[];
+  notes: number[];
 }
 
 interface GameState {
@@ -41,6 +43,8 @@ interface GameState {
 
   puzzle: Puzzle | null;
   digits: number[]; // player entry per cell, 0 = blank; clue cells stay 0
+  notes: number[]; // pencil-mark bitmask per cell
+  pencil: boolean; // digit input toggles pencil marks instead of entering
   selected: number | null; // selected fill-cell index
   history: Snapshot[];
   future: Snapshot[];
@@ -68,6 +72,7 @@ interface GameState {
   moveSelection: (dRow: number, dCol: number) => void;
   enterDigit: (digit: number) => void;
   erase: () => void;
+  togglePencil: () => void;
   undo: () => void;
   redo: () => void;
   clearMarks: () => void;
@@ -90,6 +95,10 @@ function firstFillCell(puzzle: Puzzle): number | null {
   return null;
 }
 
+function emptyNotes(puzzle: Puzzle): number[] {
+  return new Array(puzzle.size * puzzle.size).fill(0);
+}
+
 function isWin(digits: number[], puzzle: Puzzle): boolean {
   const { cells, solution } = puzzle;
   for (let i = 0; i < cells.length; i++) {
@@ -110,6 +119,7 @@ export const useKakuro = create<GameState>((set, get) => {
       difficulty: s.puzzle.difficulty,
       dailyKey: s.dailyKey,
       digits: s.digits,
+      notes: s.notes,
       startedAt: s.startedAt,
       elapsedMs: s.elapsedMs,
       mistakes: s.mistakes,
@@ -126,6 +136,8 @@ export const useKakuro = create<GameState>((set, get) => {
     set({
       puzzle,
       digits: emptyDigits(puzzle),
+      notes: emptyNotes(puzzle),
+      pencil: false,
       selected: firstFillCell(puzzle),
       history: [],
       future: [],
@@ -188,23 +200,31 @@ export const useKakuro = create<GameState>((set, get) => {
   /**
    * Write `digit` (0 clears) into the selected white cell. A mistake is only
    * counted when a non-zero digit that differs from the solution is committed.
+   * Entering a digit clears the cell's pencil marks; clearing an already empty
+   * cell removes its pencil marks instead.
    */
   function place(digit: number): void {
     const s = get();
     if (!s.puzzle || s.solved || s.review) return;
     const i = s.selected;
     if (i === null || !s.puzzle.cells[i].fill) return;
-    if (s.digits[i] === digit) return;
+
+    const clearingNotes = digit === 0 && s.digits[i] === 0;
+    if (s.digits[i] === digit && !clearingNotes) return;
+    if (clearingNotes && s.notes[i] === 0) return;
 
     const digits = s.digits.slice();
     digits[i] = digit;
+    const notes = s.notes.slice();
+    notes[i] = 0;
 
     let mistakes = s.mistakes;
     if (digit !== 0 && digit !== s.puzzle.solution[i]) mistakes++;
 
     set({
       digits,
-      history: [...s.history, { digits: s.digits }],
+      notes,
+      history: [...s.history, { digits: s.digits, notes: s.notes }],
       future: [],
       mistakes,
     });
@@ -216,12 +236,31 @@ export const useKakuro = create<GameState>((set, get) => {
     }
   }
 
+  /** Toggle a pencil mark for `digit` in the selected cell (if still empty). */
+  function pencilIn(digit: number): void {
+    const s = get();
+    if (!s.puzzle || s.solved || s.review) return;
+    const i = s.selected;
+    if (i === null || !s.puzzle.cells[i].fill || s.digits[i] !== 0) return;
+
+    const notes = s.notes.slice();
+    notes[i] = toggleNote(notes[i], digit);
+    set({
+      notes,
+      history: [...s.history, { digits: s.digits, notes: s.notes }],
+      future: [],
+    });
+    void saveCurrent();
+  }
+
   return {
     ready: false,
     screen: 'home',
     theme: 'light',
     puzzle: null,
     digits: [],
+    notes: [],
+    pencil: false,
     selected: null,
     history: [],
     future: [],
@@ -253,12 +292,17 @@ export const useKakuro = create<GameState>((set, get) => {
       if (saved) {
         const puzzle = generate(saved.seed, saved.difficulty);
         const digits = emptyDigits(puzzle);
+        const notes = emptyNotes(puzzle);
         for (let i = 0; i < digits.length; i++) {
-          if (puzzle.cells[i].fill && saved.digits?.[i]) digits[i] = saved.digits[i];
+          if (!puzzle.cells[i].fill) continue;
+          if (saved.digits?.[i]) digits[i] = saved.digits[i];
+          else if (saved.notes?.[i]) notes[i] = saved.notes[i];
         }
         set({
           puzzle,
           digits,
+          notes,
+          pencil: false,
           selected: firstFillCell(puzzle),
           history: [],
           future: [],
@@ -306,6 +350,8 @@ export const useKakuro = create<GameState>((set, get) => {
       set({
         puzzle,
         digits,
+        notes: emptyNotes(puzzle),
+        pencil: false,
         selected: null,
         history: [],
         future: [],
@@ -357,11 +403,16 @@ export const useKakuro = create<GameState>((set, get) => {
     },
 
     enterDigit(digit) {
-      place(digit);
+      if (get().pencil) pencilIn(digit);
+      else place(digit);
     },
 
     erase() {
       place(0);
+    },
+
+    togglePencil() {
+      set((s) => ({ pencil: !s.pencil }));
     },
 
     undo() {
@@ -370,8 +421,9 @@ export const useKakuro = create<GameState>((set, get) => {
       const prev = s.history[s.history.length - 1];
       set({
         digits: prev.digits,
+        notes: prev.notes,
         history: s.history.slice(0, -1),
-        future: [{ digits: s.digits }, ...s.future],
+        future: [{ digits: s.digits, notes: s.notes }, ...s.future],
       });
       if (!s.solved && isWin(prev.digits, s.puzzle)) {
         void finishGame();
@@ -386,7 +438,8 @@ export const useKakuro = create<GameState>((set, get) => {
       const next = s.future[0];
       set({
         digits: next.digits,
-        history: [...s.history, { digits: s.digits }],
+        notes: next.notes,
+        history: [...s.history, { digits: s.digits, notes: s.notes }],
         future: s.future.slice(1),
       });
       if (!s.solved && isWin(next.digits, s.puzzle)) {
@@ -401,7 +454,8 @@ export const useKakuro = create<GameState>((set, get) => {
       if (!s.puzzle || s.review) return;
       set({
         digits: emptyDigits(s.puzzle),
-        history: [...s.history, { digits: s.digits }],
+        notes: emptyNotes(s.puzzle),
+        history: [...s.history, { digits: s.digits, notes: s.notes }],
         future: [],
       });
       void saveCurrent();

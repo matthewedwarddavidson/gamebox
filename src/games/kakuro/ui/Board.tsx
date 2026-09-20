@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import { computeRuns, type Puzzle } from '../engine';
+import { noteDigits } from '../store/notes';
 
 interface BoardProps {
   puzzle: Puzzle;
   digits: number[];
+  notes: number[];
   selected: number | null;
   review: boolean;
   onSelect: (index: number) => void;
@@ -33,7 +35,7 @@ function ClueCell({ right, down }: { right?: number; down?: number }) {
   );
 }
 
-export function Board({ puzzle, digits, selected, review, onSelect }: BoardProps) {
+export function Board({ puzzle, digits, notes, selected, review, onSelect }: BoardProps) {
   const { size, cells } = puzzle;
 
   // Peers: the across and down run cells sharing a run with the selected cell.
@@ -57,6 +59,7 @@ export function Board({ puzzle, digits, selected, review, onSelect }: BoardProps
         const r = Math.floor(i / size);
         const c = i % size;
         const value = digits[i];
+        const pencilled = value === 0 ? noteDigits(notes[i] ?? 0) : [];
         const isSelected = selected === i;
         const isPeer = !isSelected && peers.has(i);
         return (
@@ -72,9 +75,21 @@ export function Board({ puzzle, digits, selected, review, onSelect }: BoardProps
               .join(' ')}
             onClick={() => onSelect(i)}
             disabled={review}
-            aria-label={`row ${r + 1} column ${c + 1}${value ? `, ${value}` : ', empty'}`}
+            aria-label={`row ${r + 1} column ${c + 1}${
+              value ? `, ${value}` : pencilled.length ? `, notes ${pencilled.join(' ')}` : ', empty'
+            }`}
           >
-            {value !== 0 ? value : ''}
+            {value !== 0 ? (
+              value
+            ) : pencilled.length > 0 ? (
+              <span className="kk-notes" aria-hidden="true">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
+                  <span key={d}>{pencilled.includes(d) ? d : ''}</span>
+                ))}
+              </span>
+            ) : (
+              ''
+            )}
           </button>
         );
       })}

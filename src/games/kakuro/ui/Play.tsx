@@ -14,11 +14,14 @@ export function Play() {
   const elapsedMs = useKakuro((s) => s.elapsedMs);
   const solved = useKakuro((s) => s.solved);
   const running = useKakuro((s) => s.running);
+  const notes = useKakuro((s) => s.notes);
+  const pencil = useKakuro((s) => s.pencil);
 
   const select = useKakuro((s) => s.select);
   const moveSelection = useKakuro((s) => s.moveSelection);
   const enterDigit = useKakuro((s) => s.enterDigit);
   const erase = useKakuro((s) => s.erase);
+  const togglePencil = useKakuro((s) => s.togglePencil);
   const undo = useKakuro((s) => s.undo);
   const redo = useKakuro((s) => s.redo);
   const clearMarks = useKakuro((s) => s.clearMarks);
@@ -41,6 +44,8 @@ export function Play() {
     function onKey(ev: KeyboardEvent) {
       if (ev.key >= '1' && ev.key <= '9') {
         enterDigit(Number(ev.key));
+      } else if (ev.key === 'n' || ev.key === 'N') {
+        togglePencil();
       } else if (ev.key === 'Backspace' || ev.key === 'Delete' || ev.key === '0') {
         erase();
       } else if (ev.key === 'ArrowUp') {
@@ -58,7 +63,7 @@ export function Play() {
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [review, solved, enterDigit, erase, moveSelection]);
+  }, [review, solved, enterDigit, erase, togglePencil, moveSelection]);
 
   if (!puzzle) {
     return (
@@ -84,6 +89,7 @@ export function Play() {
         <Board
           puzzle={puzzle}
           digits={digits}
+          notes={notes}
           selected={selected}
           review={review}
           onSelect={select}
@@ -111,11 +117,23 @@ export function Play() {
       </div>
 
       {!review && (
-        <NumberPad onDigit={enterDigit} onErase={erase} disabled={selected === null} />
+        <NumberPad
+          onDigit={enterDigit}
+          onErase={erase}
+          pencil={pencil}
+          disabled={selected === null}
+        />
       )}
 
       {!review && (
         <div className="play__controls">
+          <button
+            className={`btn kk-notes-toggle${pencil ? ' kk-notes-toggle--on' : ''}`}
+            onClick={togglePencil}
+            aria-pressed={pencil}
+          >
+            ✎ Notes
+          </button>
           <button className="btn" onClick={undo} disabled={!canUndo}>
             Undo
           </button>
@@ -130,7 +148,7 @@ export function Play() {
 
       <p className="muted kk-hint-text">
         Tap a white cell, then pick a digit (or use your keyboard: 1–9, arrow keys
-        to move, Backspace to erase). Each across and down run must use the digits
+        to move, Backspace to erase, N to toggle pencil notes). Each across and down run must use the digits
         1–9 without repeats and add up to the clue shown in the black cell at its
         start — the across sum sits in the top-right, the down sum in the
         bottom-left.

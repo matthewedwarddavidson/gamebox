@@ -26,6 +26,7 @@ export interface SavedGame extends StoredSavedGame {
   difficulty: Difficulty;
   dailyKey?: string;
   digits: number[]; // player's entry per cell, 0 for blank/clue cells
+  notes?: number[]; // pencil-mark bitmask per cell (absent in older saves)
   startedAt: number;
   elapsedMs: number;
   mistakes: number;
