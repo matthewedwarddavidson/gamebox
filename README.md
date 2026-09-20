@@ -17,6 +17,9 @@ Pick a game from the hub:
 - **Train Tracks** — [Train Tracks](https://en.wikipedia.org/wiki/Train_Tracks_(puzzle)):
   lay one continuous, non-branching track between two fixed border stubs, using
   the counts of how many cells hold track in each row and column.
+- **Kakuro** — [Kakuro](https://en.wikipedia.org/wiki/Kakuro), the numbers
+  crossword: fill each run of white cells with the digits 1–9, no repeats, so
+  that it adds up to the clue in the black cell at its start.
 
 <!-- markdownlint-disable MD033 -->
 <p><em>Shikaku</em><br />
@@ -41,6 +44,9 @@ exact same puzzle.
 - **Train Tracks** carves a random self-avoiding path between two border stubs,
   derives the row/column track counts, then reveals the minimal set of given
   pieces needed for a unique solution (plus a few extra on easier levels).
+- **Kakuro** lays out a connected band of short runs, fills it with digits that
+  are distinct within each run, derives the clue sums, then anneals individual
+  digits until the solver finds exactly one solution.
 
 This keeps things simple and serverless:
 
@@ -187,7 +193,7 @@ identifier):
   is cleared when the tab closes and is not stored across visits, so there's no
   durable device identifier and no cross-session tracking.
 - **Games started** and **games completed**, each tagged with the game type
-  (`shikaku` / `battleships` / `traintracks`), mode (`daily` / `free`) and difficulty.
+  (`shikaku` / `battleships` / `traintracks` / `kakuro`), mode (`daily` / `free`) and difficulty.
 - **Solve time** (`durationMs`) on completion.
 
 From these events you can derive sessions, plays per game, difficulty

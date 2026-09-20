@@ -15,6 +15,7 @@ dist-ssr/
 .idea/
 .DS_Store
 copilot-instructions.md
+CLAUDE.md
 .github/plans/*
 docs/adding-a-new-game.md
 

@@ -1,0 +1,180 @@
+/* Kakuro-specific styles. Shared design-system classes (.app, .card, .btn,
+   .chip, .badge, .win, .stat, .play, etc.) and the CSS theme variables are
+   provided globally by the app's base stylesheet. */
+
+.kk-board-wrap {
+  position: relative;
+}
+
+.kk-board {
+  display: grid;
+  gap: 2px;
+  background: var(--kk-grid-line, var(--border));
+  padding: 2px;
+  border-radius: 10px;
+  border: 2px solid var(--kk-grid-line, var(--border));
+  margin: 12px auto;
+  width: min(92vw, 460px);
+  aspect-ratio: 1;
+  user-select: none;
+  --kk-clue-bg: #33405a;
+}
+
+[data-theme='dark'] .kk-board {
+  --kk-clue-bg: #2a3346;
+}
+
+.kk-cell {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-size: clamp(0.9rem, 5vw, 1.6rem);
+  font-weight: 600;
+  border: none;
+  border-radius: 2px;
+}
+
+/* Black clue / block cells. */
+.kk-cell--block {
+  background: var(--kk-clue-bg);
+}
+
+.kk-cell--clue {
+  background: var(--kk-clue-bg);
+  overflow: hidden;
+}
+
+.kk-clue {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.kk-clue__slash {
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 1.5;
+}
+
+.kk-clue__num {
+  fill: #fff;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.kk-clue__num--right {
+  text-anchor: middle;
+}
+
+.kk-clue__num--down {
+  text-anchor: middle;
+}
+
+/* White fill cells. */
+.kk-cell--fill {
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.08s ease;
+}
+
+.kk-cell--fill:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.kk-cell--peer {
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+}
+
+.kk-cell--selected {
+  background: color-mix(in srgb, var(--primary) 30%, var(--surface));
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.kk-cell--fill:disabled {
+  cursor: default;
+}
+
+/* Number pad. */
+.kk-pad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin: 12px auto 0;
+  width: min(92vw, 460px);
+}
+
+.kk-pad__key {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background 0.1s ease,
+    transform 0.05s ease;
+}
+
+.kk-pad__key:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.kk-pad__key:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.kk-pad__key:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.kk-pad__key--erase {
+  font-size: 1.1rem;
+}
+
+/* Solved banner overlaid on the board so it's visible without scrolling. */
+.kk-solved-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: color-mix(in srgb, var(--surface-2) 55%, transparent);
+  backdrop-filter: blur(2px);
+  border-radius: 12px;
+  z-index: 5;
+  animation: kk-solved-in 0.18s ease-out;
+}
+
+.kk-solved-card {
+  margin: 0;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
+}
+
+@keyframes kk-solved-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.kk-hint-text {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
