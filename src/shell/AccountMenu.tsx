@@ -1,4 +1,5 @@
 import { useAuth } from './authStore';
+import { GitHubIcon, GoogleIcon } from './ProviderIcons';
 
 /**
  * Account controls shown on the hub. When signed out it offers Google / GitHub
@@ -49,11 +50,21 @@ export function AccountMenu() {
     <div className="account">
       <span className="muted account__status">Save your progress across devices</span>
       <div className="account__actions">
-        <button className="btn btn--subtle account__btn" onClick={() => void signInWithGoogle()}>
-          Sign in with Google
+        <button
+          className="account__provider"
+          onClick={() => void signInWithGoogle()}
+          aria-label="Sign in with Google"
+          title="Sign in with Google"
+        >
+          <GoogleIcon />
         </button>
-        <button className="btn btn--subtle account__btn" onClick={() => void signInWithGitHub()}>
-          Sign in with GitHub
+        <button
+          className="account__provider"
+          onClick={() => void signInWithGitHub()}
+          aria-label="Sign in with GitHub"
+          title="Sign in with GitHub"
+        >
+          <GitHubIcon />
         </button>
       </div>
       {error ? <span className="account__error">{error}</span> : null}

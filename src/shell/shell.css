@@ -115,13 +115,42 @@ button.breadcrumb__crumb:hover {
 .account__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
   justify-content: center;
 }
 
 .account__btn {
   width: auto;
   padding: 6px 12px;
+}
+
+.account__provider {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    background 0.1s ease,
+    transform 0.05s ease;
+}
+
+.account__provider:hover {
+  background: var(--border);
+}
+
+.account__provider:active {
+  transform: scale(0.95);
+}
+
+.account__provider:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .account__user {
