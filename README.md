@@ -23,7 +23,7 @@ Pick a game from the hub:
 
 <!-- markdownlint-disable MD033 -->
 <p><em>Shikaku</em><br />
-<img src="docs/example-inboxes-game.png" alt="A completed Shikaku board partitioned into coloured rectangles, each labelled with its area" width="200" /></p>
+<img src="docs/example-shikaku-game.png" alt="A completed Shikaku board partitioned into coloured rectangles, each labelled with its area" width="200" /></p>
 
 <p><em>Battleships</em><br />
 <img src="docs/example-battleships-game.png" alt="A completed Battleships board" width="200" /></p>

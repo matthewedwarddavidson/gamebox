@@ -73,7 +73,7 @@ export function Board({ puzzle, digits, notes, selected, review, onSelect }: Boa
   }, [cells, size, digits]);
 
   const gridStyle = {
-    gridTemplateColumns: `repeat(${size}, 1fr)`,
+    gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
   } as React.CSSProperties;
 
   return (

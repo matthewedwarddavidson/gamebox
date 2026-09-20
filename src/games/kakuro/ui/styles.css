@@ -29,11 +29,18 @@
   width: var(--kk-size, min(92vw, 460px));
   aspect-ratio: 1;
   user-select: none;
-  --kk-clue-bg: #33405a;
+  /* Soft periwinkle clue cells, from the same pastel family as Shikaku. */
+  --kk-clue-bg: #ccd3f1;
+  --kk-clue-ink: #3e4779;
+  --kk-clue-line: #8b96d2;
+  --kk-met: #2a8a41;
 }
 
 [data-theme='dark'] .kk-board {
-  --kk-clue-bg: #2a3346;
+  --kk-clue-bg: #2f3557;
+  --kk-clue-ink: #dfe4ff;
+  --kk-clue-line: rgba(255, 255, 255, 0.3);
+  --kk-met: #7ddc8f;
 }
 
 .kk-cell {
@@ -64,12 +71,12 @@
 }
 
 .kk-clue__slash {
-  stroke: rgba(255, 255, 255, 0.35);
+  stroke: var(--kk-clue-line);
   stroke-width: 1.5;
 }
 
 .kk-clue__num {
-  fill: #fff;
+  fill: var(--kk-clue-ink);
   font-size: 38px;
   font-weight: 700;
   text-anchor: middle;
@@ -77,7 +84,7 @@
 
 /* A run whose digits are all in and add up to its clue. */
 .kk-clue__num--met {
-  fill: #7ddc8f;
+  fill: var(--kk-met);
 }
 
 /* White fill cells. */

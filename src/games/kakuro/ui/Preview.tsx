@@ -1,6 +1,10 @@
 // A simplified thumbnail of a Kakuro board for the hub tile: a small grid with
-// black clue cells (diagonal split carrying sums) and white cells holding a few
+// pastel clue cells (diagonal split carrying sums) and white cells holding a few
 // sample digits.
+// Pastel periwinkle clue cells, matching the board.
+const CLUE_BG = '#ccd3f1';
+const CLUE_INK = '#3e4779';
+const CLUE_LINE = '#8b96d2';
 const CELL = 12;
 const SIZE = 4;
 
@@ -68,14 +72,14 @@ export function KakuroPreview() {
         const clue = CLUES[i];
         return (
           <g key={i}>
-            <rect x={x} y={y} width={CELL} height={CELL} fill="var(--kk-clue-bg, #33405a)" />
+            <rect x={x} y={y} width={CELL} height={CELL} fill={CLUE_BG} />
             {clue && (
               <line
                 x1={x}
                 y1={y}
                 x2={x + CELL}
                 y2={y + CELL}
-                stroke="rgba(255,255,255,0.35)"
+                stroke={CLUE_LINE}
                 strokeWidth={0.75}
               />
             )}
@@ -87,7 +91,7 @@ export function KakuroPreview() {
                 dominantBaseline="central"
                 fontSize={5}
                 fontWeight={700}
-                fill="#fff"
+                fill={CLUE_INK}
               >
                 {clue.right}
               </text>
@@ -100,7 +104,7 @@ export function KakuroPreview() {
                 dominantBaseline="central"
                 fontSize={5}
                 fontWeight={700}
-                fill="#fff"
+                fill={CLUE_INK}
               >
                 {clue.down}
               </text>
@@ -111,7 +115,7 @@ export function KakuroPreview() {
 
       {/* Grid lines. */}
       {Array.from({ length: SIZE + 1 }, (_, k) => (
-        <g key={`g${k}`} stroke="rgba(0,0,0,0.18)" strokeWidth={0.75}>
+        <g key={`g${k}`} stroke="rgba(120, 105, 70, 0.28)" strokeWidth={0.75}>
           <line x1={k * CELL} y1={0} x2={k * CELL} y2={total} />
           <line x1={0} y1={k * CELL} x2={total} y2={k * CELL} />
         </g>
