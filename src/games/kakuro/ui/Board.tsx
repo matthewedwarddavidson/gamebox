@@ -13,7 +13,17 @@ interface BoardProps {
 
 /** A black clue cell: a diagonal split carrying the across (top-right) and/or
  *  down (bottom-left) run sums. */
-function ClueCell({ right, down }: { right?: number; down?: number }) {
+function ClueCell({
+  right,
+  down,
+  rightMet,
+  downMet,
+}: {
+  right?: number;
+  down?: number;
+  rightMet: boolean;
+  downMet: boolean;
+}) {
   const hasClue = right !== undefined || down !== undefined;
   if (!hasClue) return <div className="kk-cell kk-cell--block" aria-hidden="true" />;
   return (
@@ -21,12 +31,12 @@ function ClueCell({ right, down }: { right?: number; down?: number }) {
       <svg viewBox="0 0 100 100" className="kk-clue" aria-hidden="true">
         <line x1="0" y1="0" x2="100" y2="100" className="kk-clue__slash" />
         {right !== undefined && (
-          <text x="73" y="38" className="kk-clue__num kk-clue__num--right">
+          <text x="73" y="38" className={`kk-clue__num${rightMet ? ' kk-clue__num--met' : ''}`}>
             {right}
           </text>
         )}
         {down !== undefined && (
-          <text x="27" y="86" className="kk-clue__num kk-clue__num--down">
+          <text x="27" y="86" className={`kk-clue__num${downMet ? ' kk-clue__num--met' : ''}`}>
             {down}
           </text>
         )}
@@ -48,6 +58,20 @@ export function Board({ puzzle, digits, notes, selected, review, onSelect }: Boa
     return set;
   }, [cells, size, selected]);
 
+  // A run's clue is met once every cell is filled, the digits are distinct and
+  // they add up to the target. Keyed by clue cell index and direction.
+  const met = useMemo(() => {
+    const done = new Set<string>();
+    for (const run of computeRuns(cells, size)) {
+      const values = run.cells.map((ci) => digits[ci]);
+      if (values.some((v) => v === 0) || new Set(values).size !== values.length) continue;
+      const owner = cells[run.clueIndex];
+      const target = run.dir === 'right' ? owner.right : owner.down;
+      if (values.reduce((a, b) => a + b, 0) === target) done.add(`${run.clueIndex}-${run.dir}`);
+    }
+    return done;
+  }, [cells, size, digits]);
+
   const gridStyle = {
     gridTemplateColumns: `repeat(${size}, 1fr)`,
   } as React.CSSProperties;
@@ -55,7 +79,15 @@ export function Board({ puzzle, digits, notes, selected, review, onSelect }: Boa
   return (
     <div className="kk-board" style={gridStyle}>
       {cells.map((cell, i) => {
-        if (!cell.fill) return <ClueCell key={i} right={cell.right} down={cell.down} />;
+        if (!cell.fill) return (
+            <ClueCell
+              key={i}
+              right={cell.right}
+              down={cell.down}
+              rightMet={met.has(`${i}-right`)}
+              downMet={met.has(`${i}-down`)}
+            />
+          );
         const r = Math.floor(i / size);
         const c = i % size;
         const value = digits[i];

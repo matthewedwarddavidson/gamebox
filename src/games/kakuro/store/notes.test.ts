@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { noteDigits, toggleNote } from './notes';
+import { clearNote, noteDigits, toggleNote } from './notes';
 
 describe('kakuro notes', () => {
   it('starts empty', () => {
@@ -17,5 +17,11 @@ describe('kakuro notes', () => {
 
   it('returns to an empty mask when every mark is removed', () => {
     expect(toggleNote(toggleNote(0, 5), 5)).toBe(0);
+  });
+
+  it('removes a single digit without disturbing the others', () => {
+    const mask = toggleNote(toggleNote(toggleNote(0, 2), 5), 8);
+    expect(noteDigits(clearNote(mask, 5))).toEqual([2, 8]);
+    expect(clearNote(mask, 7)).toBe(mask);
   });
 });

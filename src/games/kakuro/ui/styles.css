@@ -60,14 +60,12 @@
   fill: #fff;
   font-size: 38px;
   font-weight: 700;
-}
-
-.kk-clue__num--right {
   text-anchor: middle;
 }
 
-.kk-clue__num--down {
-  text-anchor: middle;
+/* A run whose digits are all in and add up to its clue. */
+.kk-clue__num--met {
+  fill: #7ddc8f;
 }
 
 /* White fill cells. */

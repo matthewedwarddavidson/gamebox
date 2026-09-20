@@ -5,6 +5,7 @@
 import { create } from 'zustand';
 import {
   SIZE_FOR,
+  computeRuns,
   dailyFor,
   generate,
   type Difficulty,
@@ -21,7 +22,7 @@ import {
   putSavedGame,
 } from '../../../shell/db';
 import { computeStats, emptyStats } from './stats';
-import { toggleNote } from './notes';
+import { clearNote, toggleNote } from './notes';
 import type { GameRecord, SavedGame, Stats } from './types';
 import { trackGameCompleted, trackGameStarted } from '../../../shell/analytics';
 
@@ -201,7 +202,8 @@ export const useKakuro = create<GameState>((set, get) => {
   /**
    * Write `digit` (0 clears) into the selected white cell. A mistake is only
    * counted when a non-zero digit that differs from the solution is committed.
-   * Entering a digit clears the cell's pencil marks; clearing an already empty
+   * Entering a digit clears the cell's pencil marks, and that digit from the
+   * notes of every other cell in its across and down runs; clearing an already empty
    * cell removes its pencil marks instead.
    */
   function place(digit: number): void {
@@ -218,6 +220,13 @@ export const useKakuro = create<GameState>((set, get) => {
     digits[i] = digit;
     const notes = s.notes.slice();
     notes[i] = 0;
+    if (digit !== 0) {
+      // The digit can no longer appear elsewhere in this cell's runs.
+      for (const run of computeRuns(s.puzzle.cells, s.puzzle.size)) {
+        if (!run.cells.includes(i)) continue;
+        for (const ci of run.cells) notes[ci] = clearNote(notes[ci], digit);
+      }
+    }
 
     let mistakes = s.mistakes;
     if (digit !== 0 && digit !== s.puzzle.solution[i]) mistakes++;

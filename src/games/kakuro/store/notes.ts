@@ -6,6 +6,11 @@ export function toggleNote(mask: number, d: number): number {
   return mask ^ (1 << d);
 }
 
+/** A note mask with digit `d` removed. */
+export function clearNote(mask: number, d: number): number {
+  return mask & ~(1 << d);
+}
+
 /** The pencilled-in digits of a note mask, in ascending order. */
 export function noteDigits(mask: number): number[] {
   const digits: number[] = [];
